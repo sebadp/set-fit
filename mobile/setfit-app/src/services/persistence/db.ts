@@ -1,4 +1,4 @@
-import { openDatabaseAsync, SQLiteDatabase } from 'expo-sqlite/next';
+import { openDatabaseAsync, SQLiteDatabase } from 'expo-sqlite';
 
 import { mockRoutines } from '@/data/mockRoutines';
 
