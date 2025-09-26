@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import { Tabs } from 'expo-router';
 
-import { useTheme } from '@/theme/ThemeProvider';
+import { useTheme } from '../../src/theme/ThemeProvider';
 
 const iconMap: Record<string, { default: React.ComponentProps<typeof Ionicons>['name']; focused: React.ComponentProps<typeof Ionicons>['name'] }> = {
   index: { default: 'home-outline', focused: 'home' },

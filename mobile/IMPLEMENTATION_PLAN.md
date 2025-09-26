@@ -144,3 +144,7 @@ Persistimos rutinas/bloques con `FOREIGN KEY`s. Para historial rápido usamos `v
 7. Integrar audio/haptics y tests.
 
 > *Nota de investigación:* El entorno actual está sin acceso a internet, así que esta planificación se basa en el estado del ecosistema Expo hasta 2024 y en la roadmap pública de Expo/EAS. Antes de agosto 2025 conviene reconfirmar versiones exactas (SDK 52/53) y compatibilidades.
+
+    npm config set legacy-peer-deps true
+    NODE_ENV=production npx eas build --profile preview --platform android --local
+npx expo export --platform android
