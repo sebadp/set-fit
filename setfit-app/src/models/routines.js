@@ -32,6 +32,21 @@ export const BLOCK_TYPES = {
   EXERCISE: 'exercise',
   REST: 'rest',
   PREPARATION: 'preparation',
+  SET_GROUP: 'set_group', // Grupo de series con múltiples ejercicios
+};
+
+export const EXERCISE_TYPES = {
+  TIME_BASED: 'time_based', // Basado en tiempo (ej: plancha 30s)
+  REP_BASED: 'rep_based',   // Basado en repeticiones (ej: 15 push-ups)
+  DISTANCE_BASED: 'distance_based', // Basado en distancia (ej: 100m corriendo)
+};
+
+export const SET_STRUCTURES = {
+  STRAIGHT_SET: 'straight_set',     // Serie normal: 3 sets x 15 reps
+  SUPERSET: 'superset',             // Superserie: 2 ejercicios sin descanso
+  CIRCUIT: 'circuit',               // Circuito: múltiples ejercicios en rotación
+  PYRAMID: 'pyramid',               // Pirámide: repeticiones crecientes/decrecientes
+  DROP_SET: 'drop_set',             // Drop set: reducir peso/intensidad
 };
 
 // Default exercises for the library
@@ -45,6 +60,10 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['full_body']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 1,
+    rest_between_sets: 0,
   },
   {
     name: 'Movilidad Articular',
@@ -54,6 +73,12 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['joints']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 1,
+    rest_between_sets: 0,
+    equipment: JSON.stringify([]),
+    instructions: 'Realiza movimientos circulares suaves en articulaciones principales: cuello, hombros, muñecas, caderas, rodillas y tobillos.',
   },
 
   // HIIT exercises
@@ -65,6 +90,12 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['full_body', 'cardio']),
     difficulty: DIFFICULTY_LEVELS.INTERMEDIATE,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.REP_BASED,
+    default_reps: 10,
+    default_sets: 3,
+    rest_between_sets: 60,
+    equipment: JSON.stringify([]),
+    instructions: '1. Parado, baja a sentadilla y coloca manos en el suelo. 2. Salta hacia atrás a plancha. 3. Haz una flexión (opcional). 4. Salta hacia adelante a sentadilla. 5. Salta hacia arriba con brazos extendidos.',
   },
   {
     name: 'Mountain Climbers',
@@ -74,6 +105,12 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['core', 'cardio', 'arms']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 3,
+    rest_between_sets: 45,
+    equipment: JSON.stringify([]),
+    instructions: 'En posición de plancha, alterna rápidamente llevando rodillas al pecho como si estuvieras corriendo en el lugar.',
   },
   {
     name: 'Jumping Jacks',
@@ -83,6 +120,12 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['cardio', 'legs']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.REP_BASED,
+    default_reps: 20,
+    default_sets: 3,
+    rest_between_sets: 30,
+    equipment: JSON.stringify([]),
+    instructions: 'Parado con pies juntos y brazos a los lados. Salta abriendo piernas y subiendo brazos sobre la cabeza. Regresa a posición inicial.',
   },
 
   // Strength
@@ -94,6 +137,12 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['chest', 'arms', 'core']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.REP_BASED,
+    default_reps: 12,
+    default_sets: 3,
+    rest_between_sets: 60,
+    equipment: JSON.stringify([]),
+    instructions: 'En posición de plancha, baja el pecho hacia el suelo flexionando brazos. Empuja hacia arriba hasta extender completamente los brazos.',
   },
   {
     name: 'Squats',
@@ -103,6 +152,12 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['legs', 'glutes']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.REP_BASED,
+    default_reps: 15,
+    default_sets: 3,
+    rest_between_sets: 60,
+    equipment: JSON.stringify([]),
+    instructions: 'Parado con pies al ancho de hombros, baja como si te fueras a sentar. Mantén espalda recta y rodillas alineadas con los pies.',
   },
   {
     name: 'Plancha',
@@ -112,6 +167,12 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['core', 'arms']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 3,
+    rest_between_sets: 90,
+    equipment: JSON.stringify([]),
+    instructions: 'Apoya antebrazos y punta de pies en el suelo. Mantén cuerpo recto desde cabeza hasta talones. Contrae abdomen.',
   },
 
   // Rest periods
@@ -123,6 +184,12 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['recovery']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 1,
+    rest_between_sets: 0,
+    equipment: JSON.stringify([]),
+    instructions: 'Camina en el lugar suavemente o realiza estiramientos ligeros para mantener el cuerpo en movimiento durante el descanso.',
   },
   {
     name: 'Descanso Completo',
@@ -132,6 +199,127 @@ export const DEFAULT_EXERCISES = [
     muscle_groups: JSON.stringify(['recovery']),
     difficulty: DIFFICULTY_LEVELS.BEGINNER,
     is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 1,
+    rest_between_sets: 0,
+    equipment: JSON.stringify([]),
+    instructions: 'Descansa completamente. Siéntate o recostáte y permite que tu ritmo cardíaco vuelva a la normalidad.',
+  },
+
+  // Additional strength exercises
+  {
+    name: 'Lunges',
+    category: EXERCISE_CATEGORIES.STRENGTH,
+    description: 'Zancadas alternas para piernas y glúteos',
+    default_duration: 45,
+    muscle_groups: JSON.stringify(['legs', 'glutes', 'core']),
+    difficulty: DIFFICULTY_LEVELS.BEGINNER,
+    is_default: 1,
+    exercise_type: EXERCISE_TYPES.REP_BASED,
+    default_reps: 12,
+    default_sets: 3,
+    rest_between_sets: 60,
+    equipment: JSON.stringify([]),
+    instructions: 'Da un paso largo hacia adelante, baja la rodilla trasera hacia el suelo. Alterna piernas.',
+  },
+
+  {
+    name: 'Pike Push-ups',
+    category: EXERCISE_CATEGORIES.STRENGTH,
+    description: 'Flexiones en V para hombros',
+    default_duration: 45,
+    muscle_groups: JSON.stringify(['shoulders', 'arms', 'core']),
+    difficulty: DIFFICULTY_LEVELS.INTERMEDIATE,
+    is_default: 1,
+    exercise_type: EXERCISE_TYPES.REP_BASED,
+    default_reps: 8,
+    default_sets: 3,
+    rest_between_sets: 90,
+    equipment: JSON.stringify([]),
+    instructions: 'Forma una V invertida con tu cuerpo. Baja la cabeza hacia el suelo flexionando brazos.',
+  },
+
+  {
+    name: 'Wall Sit',
+    category: EXERCISE_CATEGORIES.STRENGTH,
+    description: 'Sentadilla isométrica contra la pared',
+    default_duration: 45,
+    muscle_groups: JSON.stringify(['legs', 'glutes']),
+    difficulty: DIFFICULTY_LEVELS.BEGINNER,
+    is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 3,
+    rest_between_sets: 90,
+    equipment: JSON.stringify(['wall']),
+    instructions: 'Apoya espalda contra la pared y baja hasta formar 90° con las rodillas. Mantén la posición.',
+  },
+
+  // Core exercises
+  {
+    name: 'Bicycle Crunches',
+    category: EXERCISE_CATEGORIES.CORE,
+    description: 'Abdominales en bicicleta',
+    default_duration: 30,
+    muscle_groups: JSON.stringify(['core', 'abs']),
+    difficulty: DIFFICULTY_LEVELS.BEGINNER,
+    is_default: 1,
+    exercise_type: EXERCISE_TYPES.REP_BASED,
+    default_reps: 20,
+    default_sets: 3,
+    rest_between_sets: 45,
+    equipment: JSON.stringify([]),
+    instructions: 'Acostado, lleva codo derecho hacia rodilla izquierda y viceversa, como pedaleando.',
+  },
+
+  {
+    name: 'Dead Bug',
+    category: EXERCISE_CATEGORIES.CORE,
+    description: 'Ejercicio de estabilidad core',
+    default_duration: 45,
+    muscle_groups: JSON.stringify(['core', 'stability']),
+    difficulty: DIFFICULTY_LEVELS.BEGINNER,
+    is_default: 1,
+    exercise_type: EXERCISE_TYPES.REP_BASED,
+    default_reps: 10,
+    default_sets: 3,
+    rest_between_sets: 60,
+    equipment: JSON.stringify([]),
+    instructions: 'Boca arriba, brazos arriba y rodillas a 90°. Baja brazo y pierna opuestos sin mover la espalda.',
+  },
+
+  // HIIT variations
+  {
+    name: 'High Knees',
+    category: EXERCISE_CATEGORIES.HIIT,
+    description: 'Rodillas al pecho en el lugar',
+    default_duration: 30,
+    muscle_groups: JSON.stringify(['cardio', 'legs', 'core']),
+    difficulty: DIFFICULTY_LEVELS.BEGINNER,
+    is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 3,
+    rest_between_sets: 30,
+    equipment: JSON.stringify([]),
+    instructions: 'Corre en el lugar llevando las rodillas lo más alto posible hacia el pecho.',
+  },
+
+  {
+    name: 'Butt Kickers',
+    category: EXERCISE_CATEGORIES.HIIT,
+    description: 'Talones a glúteos corriendo en el lugar',
+    default_duration: 30,
+    muscle_groups: JSON.stringify(['cardio', 'legs']),
+    difficulty: DIFFICULTY_LEVELS.BEGINNER,
+    is_default: 1,
+    exercise_type: EXERCISE_TYPES.TIME_BASED,
+    default_reps: null,
+    default_sets: 3,
+    rest_between_sets: 30,
+    equipment: JSON.stringify([]),
+    instructions: 'Corre en el lugar intentando tocar los glúteos con los talones.',
   },
 ];
 
@@ -216,6 +404,60 @@ export const ROUTINE_TEMPLATES = [
 ];
 
 // Utility functions for routine management
+// Block structure for advanced workout configuration
+export const createEmptyBlock = (type = BLOCK_TYPES.EXERCISE) => {
+  const baseBlock = {
+    id: Date.now() + Math.random(),
+    type,
+    order: 0,
+  };
+
+  switch (type) {
+    case BLOCK_TYPES.EXERCISE:
+      return {
+        ...baseBlock,
+        exercise_name: '',
+        exercise_type: EXERCISE_TYPES.TIME_BASED,
+        duration: 30,
+        reps: null,
+        sets: 1,
+        rest_between_sets: 60,
+        intensity: 'medium', // low, medium, high
+        notes: '',
+      };
+
+    case BLOCK_TYPES.SET_GROUP:
+      return {
+        ...baseBlock,
+        structure_type: SET_STRUCTURES.STRAIGHT_SET,
+        exercises: [], // Array of exercise blocks
+        sets: 3,
+        rest_between_sets: 90,
+        rest_between_exercises: 30,
+        notes: '',
+      };
+
+    case BLOCK_TYPES.REST:
+      return {
+        ...baseBlock,
+        exercise_name: 'Descanso',
+        duration: 60,
+        rest_type: 'passive', // passive, active
+      };
+
+    case BLOCK_TYPES.PREPARATION:
+      return {
+        ...baseBlock,
+        exercise_name: 'Preparación',
+        duration: 60,
+        prep_type: 'warm_up', // warm_up, setup
+      };
+
+    default:
+      return baseBlock;
+  }
+};
+
 export const createEmptyRoutine = (userId = 1) => ({
   user_id: userId,
   name: 'Nueva Rutina',
@@ -230,7 +472,62 @@ export const createEmptyRoutine = (userId = 1) => ({
 
 export const calculateRoutineDuration = (blocks) => {
   if (!Array.isArray(blocks)) return 0;
-  return blocks.reduce((total, block) => total + (block.duration || 0), 0);
+
+  return blocks.reduce((total, block) => {
+    let blockDuration = 0;
+
+    switch (block.type) {
+      case BLOCK_TYPES.EXERCISE:
+        if (block.exercise_type === EXERCISE_TYPES.TIME_BASED) {
+          blockDuration = (block.duration || 0) * (block.sets || 1);
+          if (block.sets > 1) {
+            blockDuration += (block.rest_between_sets || 0) * (block.sets - 1);
+          }
+        } else if (block.exercise_type === EXERCISE_TYPES.REP_BASED) {
+          // Estimate time based on reps (roughly 2 seconds per rep)
+          const estimatedTimePerSet = Math.max((block.reps || 0) * 2, 15);
+          blockDuration = estimatedTimePerSet * (block.sets || 1);
+          if (block.sets > 1) {
+            blockDuration += (block.rest_between_sets || 0) * (block.sets - 1);
+          }
+        }
+        break;
+
+      case BLOCK_TYPES.SET_GROUP:
+        // Calculate duration for set groups (supersets, circuits, etc.)
+        const exerciseDuration = block.exercises?.reduce((sum, exercise) => {
+          const exerciseTime = exercise.exercise_type === EXERCISE_TYPES.TIME_BASED
+            ? exercise.duration || 0
+            : Math.max((exercise.reps || 0) * 2, 15);
+          return sum + exerciseTime;
+        }, 0) || 0;
+
+        blockDuration = exerciseDuration * (block.sets || 1);
+
+        // Add rest between exercises within sets
+        const restBetweenExercises = (block.exercises?.length || 0) > 1
+          ? (block.rest_between_exercises || 0) * ((block.exercises?.length || 0) - 1) * (block.sets || 1)
+          : 0;
+
+        // Add rest between sets
+        const restBetweenSets = block.sets > 1
+          ? (block.rest_between_sets || 0) * (block.sets - 1)
+          : 0;
+
+        blockDuration += restBetweenExercises + restBetweenSets;
+        break;
+
+      case BLOCK_TYPES.REST:
+      case BLOCK_TYPES.PREPARATION:
+        blockDuration = block.duration || 0;
+        break;
+
+      default:
+        blockDuration = block.duration || 0;
+    }
+
+    return total + blockDuration;
+  }, 0);
 };
 
 export const validateRoutine = (routine) => {

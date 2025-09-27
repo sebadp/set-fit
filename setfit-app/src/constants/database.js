@@ -104,6 +104,12 @@ export const TABLES = {
         muscle_groups TEXT DEFAULT '[]',
         difficulty TEXT DEFAULT 'beginner',
         is_default INTEGER DEFAULT 0,
+        exercise_type TEXT DEFAULT 'time_based',
+        default_reps INTEGER,
+        default_sets INTEGER DEFAULT 1,
+        rest_between_sets INTEGER DEFAULT 0,
+        equipment TEXT DEFAULT '[]',
+        instructions TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `,

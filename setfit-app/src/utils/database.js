@@ -376,8 +376,9 @@ class DatabaseService {
     try {
       const result = await this.db.runAsync(
         `INSERT INTO exercises (
-          name, category, description, default_duration, muscle_groups, difficulty, is_default
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          name, category, description, default_duration, muscle_groups, difficulty, is_default,
+          exercise_type, default_reps, default_sets, rest_between_sets, equipment, instructions
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           exercise.name,
           exercise.category,
@@ -386,6 +387,12 @@ class DatabaseService {
           exercise.muscle_groups || '[]',
           exercise.difficulty || 'beginner',
           exercise.is_default || 0,
+          exercise.exercise_type || 'time_based',
+          exercise.default_reps || null,
+          exercise.default_sets || 1,
+          exercise.rest_between_sets || 0,
+          exercise.equipment || '[]',
+          exercise.instructions || '',
         ]
       );
 
