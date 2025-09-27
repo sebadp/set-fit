@@ -187,3 +187,159 @@ export const useWorkoutStats = (userId = 1) => {
     reloadStats: loadStats,
   };
 };
+
+export const useRoutines = (userId = 1) => {
+  const [routines, setRoutines] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { database, isReady } = useDatabase();
+
+  const loadRoutines = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const routinesData = await database.getAllRoutines(userId);
+      setRoutines(routinesData);
+    } catch (err) {
+      console.error('Error loading routines:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createRoutine = async (routineData) => {
+    try {
+      const routineId = await database.createRoutine(routineData);
+      await loadRoutines(); // Refresh the list
+      return routineId;
+    } catch (err) {
+      console.error('Error creating routine:', err);
+      throw err;
+    }
+  };
+
+  const updateRoutine = async (routineId, updates) => {
+    try {
+      await database.updateRoutine(routineId, updates);
+      await loadRoutines(); // Refresh the list
+    } catch (err) {
+      console.error('Error updating routine:', err);
+      throw err;
+    }
+  };
+
+  const deleteRoutine = async (routineId) => {
+    try {
+      await database.deleteRoutine(routineId);
+      await loadRoutines(); // Refresh the list
+    } catch (err) {
+      console.error('Error deleting routine:', err);
+      throw err;
+    }
+  };
+
+  const duplicateRoutine = async (routine) => {
+    try {
+      const duplicatedRoutine = {
+        ...routine,
+        id: undefined,
+        name: `${routine.name} (Copia)`,
+        is_template: 0,
+        usage_count: 0,
+        last_used: null,
+      };
+
+      const routineId = await database.createRoutine(duplicatedRoutine);
+      await loadRoutines(); // Refresh the list
+      return routineId;
+    } catch (err) {
+      console.error('Error duplicating routine:', err);
+      throw err;
+    }
+  };
+
+  const updateRoutineUsage = async (routineId) => {
+    try {
+      await database.updateRoutineUsage(routineId);
+      await loadRoutines(); // Refresh the list
+    } catch (err) {
+      console.error('Error updating routine usage:', err);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    if (isReady) {
+      loadRoutines();
+    }
+  }, [isReady, userId]);
+
+  return {
+    routines,
+    loading,
+    error,
+    createRoutine,
+    updateRoutine,
+    deleteRoutine,
+    duplicateRoutine,
+    updateRoutineUsage,
+    reloadRoutines: loadRoutines,
+  };
+};
+
+export const useExercises = () => {
+  const [exercises, setExercises] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { database, isReady } = useDatabase();
+
+  const loadExercises = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const exercisesData = await database.getAllExercises();
+      setExercises(exercisesData);
+    } catch (err) {
+      console.error('Error loading exercises:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getExercisesByCategory = async (category) => {
+    try {
+      return await database.getExercisesByCategory(category);
+    } catch (err) {
+      console.error('Error loading exercises by category:', err);
+      throw err;
+    }
+  };
+
+  const createExercise = async (exerciseData) => {
+    try {
+      const exerciseId = await database.createExercise(exerciseData);
+      await loadExercises(); // Refresh the list
+      return exerciseId;
+    } catch (err) {
+      console.error('Error creating exercise:', err);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    if (isReady) {
+      loadExercises();
+    }
+  }, [isReady]);
+
+  return {
+    exercises,
+    loading,
+    error,
+    getExercisesByCategory,
+    createExercise,
+    reloadExercises: loadExercises,
+  };
+};

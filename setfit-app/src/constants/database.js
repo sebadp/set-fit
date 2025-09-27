@@ -67,6 +67,47 @@ export const TABLES = {
       );
     `,
   },
+
+  // Routines - custom workout routines
+  ROUTINES: {
+    name: 'routines',
+    schema: `
+      CREATE TABLE IF NOT EXISTS routines (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        category TEXT DEFAULT 'custom',
+        difficulty TEXT DEFAULT 'beginner',
+        is_template INTEGER DEFAULT 0,
+        total_duration INTEGER DEFAULT 0,
+        blocks_json TEXT NOT NULL DEFAULT '[]',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        last_used DATETIME,
+        usage_count INTEGER DEFAULT 0,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      );
+    `,
+  },
+
+  // Exercises - exercise library
+  EXERCISES: {
+    name: 'exercises',
+    schema: `
+      CREATE TABLE IF NOT EXISTS exercises (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        category TEXT NOT NULL,
+        description TEXT,
+        default_duration INTEGER DEFAULT 30,
+        muscle_groups TEXT DEFAULT '[]',
+        difficulty TEXT DEFAULT 'beginner',
+        is_default INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `,
+  },
 };
 
 // Default user preferences
@@ -95,4 +136,9 @@ export const INDEXES = [
   'CREATE INDEX IF NOT EXISTS idx_workout_sessions_user_id ON workout_sessions(user_id);',
   'CREATE INDEX IF NOT EXISTS idx_workout_sessions_created_at ON workout_sessions(created_at);',
   'CREATE INDEX IF NOT EXISTS idx_settings_user_key ON settings(user_id, key);',
+  'CREATE INDEX IF NOT EXISTS idx_routines_user_id ON routines(user_id);',
+  'CREATE INDEX IF NOT EXISTS idx_routines_category ON routines(category);',
+  'CREATE INDEX IF NOT EXISTS idx_routines_last_used ON routines(last_used);',
+  'CREATE INDEX IF NOT EXISTS idx_exercises_category ON exercises(category);',
+  'CREATE INDEX IF NOT EXISTS idx_exercises_name ON exercises(name);',
 ];

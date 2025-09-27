@@ -214,12 +214,15 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   scrollContent: {
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
   },
   title: {

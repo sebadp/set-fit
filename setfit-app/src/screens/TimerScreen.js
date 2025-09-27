@@ -7,11 +7,16 @@ import { theme } from '../constants/theme';
 import { useTimer } from '../hooks/useTimer';
 import { useDatabase, useSettings } from '../hooks/useDatabase';
 import { SettingsScreen } from './SettingsScreen';
+import { RoutinesScreen } from './RoutinesScreen';
+import { CreateRoutineScreen } from './CreateRoutineScreen';
 import { SETTING_KEYS } from '../constants/database';
 
 export const TimerScreen = () => {
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showRoutines, setShowRoutines] = useState(false);
+  const [showCreateRoutine, setShowCreateRoutine] = useState(false);
+  const [editingRoutine, setEditingRoutine] = useState(null);
 
   // Database hooks
   const { isLoading, isReady, error } = useDatabase();
@@ -54,9 +59,70 @@ export const TimerScreen = () => {
     return 'Listo para entrenar';
   };
 
+  // Navigation handlers
+  const handlePlayRoutine = (routine) => {
+    try {
+      const blocks = JSON.parse(routine.blocks_json);
+      if (blocks.length > 0) {
+        // For now, just use the first exercise duration or total duration
+        const firstExercise = blocks.find(block => block.type === 'exercise');
+        const duration = firstExercise ? firstExercise.duration : routine.total_duration;
+        setNewTime(duration);
+        setShowRoutines(false);
+      }
+    } catch (error) {
+      console.error('Error playing routine:', error);
+    }
+  };
+
+  const handleCreateRoutine = () => {
+    setEditingRoutine(null);
+    setShowRoutines(false);
+    setShowCreateRoutine(true);
+  };
+
+  const handleEditRoutine = (routine) => {
+    setEditingRoutine(routine);
+    setShowRoutines(false);
+    setShowCreateRoutine(true);
+  };
+
+  const handleRoutineSaved = () => {
+    setShowCreateRoutine(false);
+    setEditingRoutine(null);
+    setShowRoutines(true);
+  };
+
   // Show settings screen
   if (showSettings) {
     return <SettingsScreen onBack={() => setShowSettings(false)} />;
+  }
+
+  // Show routines screen
+  if (showRoutines) {
+    return (
+      <RoutinesScreen
+        onBack={() => setShowRoutines(false)}
+        onCreateRoutine={handleCreateRoutine}
+        onEditRoutine={handleEditRoutine}
+        onPlayRoutine={handlePlayRoutine}
+      />
+    );
+  }
+
+  // Show create routine screen
+  if (showCreateRoutine) {
+    return (
+      <CreateRoutineScreen
+        onBack={() => {
+          setShowCreateRoutine(false);
+          setEditingRoutine(null);
+          setShowRoutines(true);
+        }}
+        onSave={handleRoutineSaved}
+        editingRoutine={editingRoutine}
+      />
+    );
   }
 
   // Database loading state
@@ -105,13 +171,22 @@ export const TimerScreen = () => {
               resizeMode="contain"
             />
           </View>
-          <Button
-            title="⚙️"
-            onPress={() => setShowSettings(true)}
-            variant="ghost"
-            size="small"
-            style={styles.settingsButton}
-          />
+          <View style={styles.headerActions}>
+            <Button
+              title="🏃"
+              onPress={() => setShowRoutines(true)}
+              variant="ghost"
+              size="small"
+              style={styles.actionButton}
+            />
+            <Button
+              title="⚙️"
+              onPress={() => setShowSettings(true)}
+              variant="ghost"
+              size="small"
+              style={styles.actionButton}
+            />
+          </View>
         </View>
 
         {/* Timer Display */}
@@ -174,15 +249,17 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
     justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    paddingTop: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xl,
   },
   headerLeft: {
     flex: 1,
@@ -192,7 +269,11 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
   },
-  settingsButton: {
+  headerActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  actionButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
