@@ -42,11 +42,20 @@ export const TABLES = {
       CREATE TABLE IF NOT EXISTS workout_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
+        routine_id INTEGER,
         duration INTEGER NOT NULL,
         completed INTEGER DEFAULT 0,
         notes TEXT,
+        session_state TEXT DEFAULT 'completed',
+        current_block_index INTEGER DEFAULT 0,
+        current_set INTEGER DEFAULT 1,
+        blocks_data TEXT DEFAULT '[]',
+        pause_timestamps TEXT DEFAULT '[]',
+        started_at DATETIME,
+        completed_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (routine_id) REFERENCES routines (id)
       );
     `,
   },

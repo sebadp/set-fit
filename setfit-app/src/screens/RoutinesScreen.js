@@ -20,7 +20,7 @@ import {
   getCategoryIcon,
 } from '../models/routines';
 
-export const RoutinesScreen = ({ onBack, onCreateRoutine, onEditRoutine, onPlayRoutine }) => {
+export const RoutinesScreen = ({ onBack, onCreateRoutine, onEditRoutine, onPlayRoutine, onStartWorkout }) => {
   const [routines, setRoutines] = useState([]);
   const [filteredRoutines, setFilteredRoutines] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -9,6 +9,7 @@ import { useDatabase, useSettings } from '../hooks/useDatabase';
 import { SettingsScreen } from './SettingsScreen';
 import { RoutinesScreen } from './RoutinesScreen';
 import { CreateRoutineScreen } from './CreateRoutineScreen';
+import { WorkoutExecutionScreen } from './WorkoutExecutionScreen';
 import { SETTING_KEYS } from '../constants/database';
 
 export const TimerScreen = () => {
@@ -16,7 +17,9 @@ export const TimerScreen = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showRoutines, setShowRoutines] = useState(false);
   const [showCreateRoutine, setShowCreateRoutine] = useState(false);
+  const [showWorkoutExecution, setShowWorkoutExecution] = useState(false);
   const [editingRoutine, setEditingRoutine] = useState(null);
+  const [workoutData, setWorkoutData] = useState(null);
 
   // Database hooks
   const { isLoading, isReady, error } = useDatabase();
@@ -64,15 +67,20 @@ export const TimerScreen = () => {
     try {
       const blocks = JSON.parse(routine.blocks_json);
       if (blocks.length > 0) {
-        // For now, just use the first exercise duration or total duration
-        const firstExercise = blocks.find(block => block.type === 'exercise');
-        const duration = firstExercise ? firstExercise.duration : routine.total_duration;
-        setNewTime(duration);
+        // Start workout execution
+        setWorkoutData({ routine, blocks });
         setShowRoutines(false);
+        setShowWorkoutExecution(true);
       }
     } catch (error) {
       console.error('Error playing routine:', error);
     }
+  };
+
+  const handleStartWorkout = (routine, blocks) => {
+    setWorkoutData({ routine, blocks });
+    setShowRoutines(false);
+    setShowWorkoutExecution(true);
   };
 
   const handleCreateRoutine = () => {
@@ -93,6 +101,29 @@ export const TimerScreen = () => {
     setShowRoutines(true);
   };
 
+  // Show workout execution screen
+  if (showWorkoutExecution && workoutData) {
+    return (
+      <WorkoutExecutionScreen
+        route={{ params: workoutData }}
+        navigation={{
+          goBack: () => {
+            setShowWorkoutExecution(false);
+            setWorkoutData(null);
+            setShowRoutines(true);
+          },
+          navigate: (screen) => {
+            if (screen === 'Routines') {
+              setShowWorkoutExecution(false);
+              setWorkoutData(null);
+              setShowRoutines(true);
+            }
+          },
+        }}
+      />
+    );
+  }
+
   // Show settings screen
   if (showSettings) {
     return <SettingsScreen onBack={() => setShowSettings(false)} />;
@@ -106,6 +137,7 @@ export const TimerScreen = () => {
         onCreateRoutine={handleCreateRoutine}
         onEditRoutine={handleEditRoutine}
         onPlayRoutine={handlePlayRoutine}
+        onStartWorkout={handleStartWorkout}
       />
     );
   }
@@ -120,6 +152,7 @@ export const TimerScreen = () => {
           setShowRoutines(true);
         }}
         onSave={handleRoutineSaved}
+        onStartWorkout={handleStartWorkout}
         editingRoutine={editingRoutine}
       />
     );

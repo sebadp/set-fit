@@ -34,6 +34,7 @@ const initialLayout = { width: Dimensions.get('window').width };
 export const AdvancedRoutineBuilderScreen = ({
   onBack,
   onSave,
+  onStartWorkout,
   editingRoutine = null,
   userId = 1,
 }) => {
@@ -161,20 +162,35 @@ export const AdvancedRoutineBuilderScreen = ({
   };
 
   const handleStartWorkout = (routine, blocks) => {
-    Alert.alert(
-      '🚀 Comenzar Entrenamiento',
-      '¿Quieres empezar esta rutina ahora?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Empezar',
-          onPress: () => {
-            // Here you would navigate to workout execution screen
-            Alert.alert('🏃 ¡Entrenamiento iniciado!', 'Funcionalidad próximamente...');
+    if (onStartWorkout) {
+      Alert.alert(
+        '🚀 Comenzar Entrenamiento',
+        '¿Quieres empezar esta rutina ahora?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Empezar',
+            onPress: () => {
+              onStartWorkout(routine, blocks);
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    } else {
+      Alert.alert(
+        '🚀 Comenzar Entrenamiento',
+        '¿Quieres empezar esta rutina ahora?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Empezar',
+            onPress: () => {
+              Alert.alert('🏃 ¡Entrenamiento iniciado!', 'Funcionalidad próximamente...');
+            },
+          },
+        ]
+      );
+    }
   };
 
   // Tab Scenes
