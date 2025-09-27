@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { theme } from '../constants/theme';
 import { useWorkoutExecution, WORKOUT_STATES } from '../hooks/useWorkoutExecution';
 import { EXERCISE_TYPES, formatDuration } from '../models/routines';
+import { useDatabase } from '../hooks/useDatabase';
 
 // Workout Components
 import { ExerciseTransition } from '../components/workout/ExerciseTransition';
@@ -25,6 +26,9 @@ import { WorkoutSummary } from '../components/workout/WorkoutSummary';
 
 export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const { routine, blocks: initialBlocks } = route.params;
+
+  // Database hook
+  const { isReady: isDatabaseReady, isLoading: isDatabaseLoading } = useDatabase();
 
   // Workout execution hook
   const {
@@ -65,13 +69,13 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const timerRef = useRef(null);
   const hasStartedWorkout = useRef(false);
 
-  // Initialize workout on component mount
+  // Initialize workout on component mount (only when database is ready)
   useEffect(() => {
-    if (!hasStartedWorkout.current && initialBlocks?.length > 0) {
+    if (!hasStartedWorkout.current && initialBlocks?.length > 0 && isDatabaseReady) {
       initializeWorkout();
       hasStartedWorkout.current = true;
     }
-  }, [initialBlocks]);
+  }, [initialBlocks, isDatabaseReady]);
 
   // Handle back button
   useEffect(() => {
@@ -300,6 +304,19 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const progress = getProgress();
   const isTimeBased = currentBlock?.exercise_type === EXERCISE_TYPES.TIME_BASED;
 
+  // Show loading screen while database is initializing
+  if (isDatabaseLoading || !isDatabaseReady) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Preparando entrenamiento...</Text>
+          <Text style={styles.loadingSubtext}>Inicializando base de datos</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   // Show summary if completed
   if (isCompleted) {
     return (
@@ -426,5 +443,22 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
     padding: theme.spacing.md,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  loadingText: {
+    ...theme.typography.h2,
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  loadingSubtext: {
+    ...theme.typography.body,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
 });

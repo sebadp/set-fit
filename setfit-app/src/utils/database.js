@@ -6,7 +6,7 @@ import {
   DEFAULT_PREFERENCES,
   SETTING_KEYS
 } from '../constants/database';
-import { DEFAULT_EXERCISES } from '../models/routines';
+import { DEFAULT_EXERCISES, ROUTINE_TEMPLATES } from '../models/routines';
 
 class DatabaseService {
   constructor() {
@@ -439,8 +439,7 @@ class DatabaseService {
         return; // Templates already exist
       }
 
-      // Import default routine templates
-      const { ROUTINE_TEMPLATES } = await import('../models/routines');
+      // Use imported routine templates
 
       for (const template of ROUTINE_TEMPLATES) {
         await this.createRoutine({ ...template, user_id: 1 });
