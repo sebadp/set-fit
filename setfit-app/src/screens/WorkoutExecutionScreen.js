@@ -9,7 +9,7 @@ import {
   StatusBar,
   Vibration,
 } from 'react-native';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+// Removed React Navigation imports since we're using conditional navigation
 import * as Haptics from 'expo-haptics';
 import { theme } from '../constants/theme';
 import { useWorkoutExecution, WORKOUT_STATES } from '../hooks/useWorkoutExecution';
@@ -23,9 +23,7 @@ import { WorkoutControls } from '../components/workout/WorkoutControls';
 import { SkipExerciseModal } from '../components/workout/SkipExerciseModal';
 import { WorkoutSummary } from '../components/workout/WorkoutSummary';
 
-export const WorkoutExecutionScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
+export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const { routine, blocks: initialBlocks } = route.params;
 
   // Workout execution hook
@@ -76,21 +74,19 @@ export const WorkoutExecutionScreen = () => {
   }, [initialBlocks]);
 
   // Handle back button
-  useFocusEffect(
-    React.useCallback(() => {
-      const onBackPress = () => {
-        if (workoutState === WORKOUT_STATES.COMPLETED) {
-          return false; // Allow normal back navigation
-        }
+  useEffect(() => {
+    const onBackPress = () => {
+      if (workoutState === WORKOUT_STATES.COMPLETED) {
+        return false; // Allow normal back navigation
+      }
 
-        handleWorkoutExit();
-        return true; // Prevent default back behavior
-      };
+      handleWorkoutExit();
+      return true; // Prevent default back behavior
+    };
 
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-      return () => subscription.remove();
-    }, [workoutState])
-  );
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => subscription.remove();
+  }, [workoutState]);
 
   // Timer for time-based exercises
   useEffect(() => {
@@ -144,11 +140,25 @@ export const WorkoutExecutionScreen = () => {
 
   const initializeWorkout = async () => {
     try {
+      console.log('Initializing workout with:', { routine: routine?.name, blocksCount: initialBlocks?.length });
+
+      if (!routine) {
+        throw new Error('No routine provided');
+      }
+
+      if (!initialBlocks || initialBlocks.length === 0) {
+        throw new Error('No exercise blocks provided');
+      }
+
       await startWorkout(routine, initialBlocks);
       showPreparationTransition();
     } catch (error) {
-      Alert.alert('Error', 'No se pudo iniciar el entrenamiento');
-      navigation.goBack();
+      console.error('Failed to initialize workout:', error);
+      Alert.alert(
+        'Error',
+        `No se pudo iniciar el entrenamiento: ${error.message}`,
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
     }
   };
 

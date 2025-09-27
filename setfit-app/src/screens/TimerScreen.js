@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image, SafeAreaView, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, SafeAreaView, Text, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { TimerDisplay, TimerControls, TimeInput } from '../components/timer';
 import { Card, Button } from '../components/common';
@@ -65,15 +65,34 @@ export const TimerScreen = () => {
   // Navigation handlers
   const handlePlayRoutine = (routine) => {
     try {
-      const blocks = JSON.parse(routine.blocks_json);
-      if (blocks.length > 0) {
-        // Start workout execution
-        setWorkoutData({ routine, blocks });
-        setShowRoutines(false);
-        setShowWorkoutExecution(true);
+      console.log('Playing routine:', routine);
+
+      if (!routine) {
+        throw new Error('No routine provided');
       }
+
+      if (!routine.blocks_json) {
+        throw new Error('Routine has no blocks data');
+      }
+
+      const blocks = JSON.parse(routine.blocks_json);
+      console.log('Parsed blocks:', blocks);
+
+      if (!blocks || blocks.length === 0) {
+        throw new Error('Routine has no exercise blocks');
+      }
+
+      // Start workout execution
+      setWorkoutData({ routine, blocks });
+      setShowRoutines(false);
+      setShowWorkoutExecution(true);
     } catch (error) {
       console.error('Error playing routine:', error);
+      Alert.alert(
+        'Error',
+        `No se puede ejecutar la rutina: ${error.message}`,
+        [{ text: 'OK' }]
+      );
     }
   };
 

@@ -6,6 +6,7 @@ import {
   DEFAULT_PREFERENCES,
   SETTING_KEYS
 } from '../constants/database';
+import { DEFAULT_EXERCISES } from '../models/routines';
 
 class DatabaseService {
   constructor() {
@@ -414,8 +415,7 @@ class DatabaseService {
         return; // Default exercises already exist
       }
 
-      // Import default exercises
-      const { DEFAULT_EXERCISES } = await import('../models/routines');
+      // Use imported default exercises
 
       for (const exercise of DEFAULT_EXERCISES) {
         await this.createExercise(exercise);

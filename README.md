@@ -234,17 +234,17 @@ id, routine_id, exercise_id, duration, rest_time, order_index, series
 
 ---
 
-### **Sprint 5: Ejecución de Rutinas** (10 días)
+### **Sprint 5: Ejecución de Rutinas** ✅ (10 días)
 **Objetivo**: Motor de ejecución con transiciones fluidas
 
 **Entregables**:
-- [ ] Estado de workout activo
-- [ ] Transiciones entre ejercicios
-- [ ] Contador de series
-- [ ] Progreso visual de la rutina
-- [ ] Pausa y reanudación
-- [ ] Skip ejercicio
-- [ ] Resumen al finalizar
+- [x] Estado de workout activo
+- [x] Transiciones entre ejercicios
+- [x] Contador de series
+- [x] Progreso visual de la rutina
+- [x] Pausa y reanudación
+- [x] Skip ejercicio
+- [x] Resumen al finalizar
 
 **Estados del Workout**:
 ```javascript

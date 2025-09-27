@@ -11,7 +11,7 @@ export const WORKOUT_STATES = {
 };
 
 export const useWorkoutExecution = () => {
-  const { db } = useDatabase();
+  const { db, isReady } = useDatabase();
   const [workoutState, setWorkoutState] = useState(WORKOUT_STATES.PREPARING);
   const [currentWorkoutSession, setCurrentWorkoutSession] = useState(null);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
@@ -28,9 +28,21 @@ export const useWorkoutExecution = () => {
   // Start a new workout session
   const startWorkout = useCallback(async (routine, workoutBlocks, userId = 1) => {
     try {
+      // Validate inputs
       if (!workoutBlocks || workoutBlocks.length === 0) {
         throw new Error('No blocks provided for workout');
       }
+
+      if (!db || !isReady) {
+        throw new Error('Database not ready');
+      }
+
+      // Validate routine data
+      if (!routine) {
+        throw new Error('No routine provided');
+      }
+
+      console.log('Starting workout with:', { routine: routine.name, blocks: workoutBlocks.length });
 
       // Create new workout session in database
       const result = await db.runAsync(
@@ -73,7 +85,7 @@ export const useWorkoutExecution = () => {
       console.error('Error starting workout:', error);
       throw error;
     }
-  }, [db]);
+  }, [db, isReady]);
 
   // Begin active workout (after preparation)
   const beginActiveWorkout = useCallback(() => {
