@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Haptics from 'expo-haptics';
+import { useSettings, useWorkoutStats } from './useDatabase';
+import { SETTING_KEYS } from '../constants/database';
 
 export const useTimer = (initialTime = 300) => {
   const [time, setTime] = useState(initialTime);
@@ -8,14 +10,22 @@ export const useTimer = (initialTime = 300) => {
   const [isPaused, setIsPaused] = useState(false);
   const intervalRef = useRef(null);
 
+  // Database hooks
+  const { getSetting } = useSettings();
+  const { saveWorkout } = useWorkoutStats();
+
+  // Get user preferences
+  const vibrationEnabled = getSetting(SETTING_KEYS.VIBRATION_ENABLED, true);
+  const soundsEnabled = getSetting(SETTING_KEYS.SOUNDS_ENABLED, true);
+
   useEffect(() => {
     if (isActive && !isPaused && time > 0) {
       intervalRef.current = setInterval(() => {
         setTime((prevTime) => {
           const newTime = prevTime - 1;
 
-          // Haptic feedback en los últimos 3 segundos
-          if (newTime <= 3 && newTime > 0) {
+          // Haptic feedback en los últimos 3 segundos (respeta configuración)
+          if (newTime <= 3 && newTime > 0 && vibrationEnabled) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }
 
@@ -23,7 +33,18 @@ export const useTimer = (initialTime = 300) => {
           if (newTime === 0) {
             setIsActive(false);
             setIsPaused(false);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+            // Feedback al completar (respeta configuración)
+            if (vibrationEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+
+            // Guardar workout en la base de datos
+            try {
+              saveWorkout(initialTime_, true);
+            } catch (error) {
+              console.error('Failed to save workout:', error);
+            }
           }
 
           return newTime;

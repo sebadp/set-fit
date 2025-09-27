@@ -1,12 +1,12 @@
-# SetFit - Sprint 1 ✅
+# SetFit - Sprint 2 ✅
 
 > *Bloques. Ritmo. Resultado.*
 
 ## 🚀 Estado del Proyecto
 
-**Sprint 1 COMPLETADO** - Timer básico funcional implementado.
+**Sprint 2 COMPLETADO** - Sistema de usuarios y persistencia local implementado.
 
-### ✅ Sprint 0 + Sprint 1 Completado:
+### ✅ Sprint 0 + Sprint 1 + Sprint 2 Completado:
 - [x] Proyecto Expo inicializado con SDK 54
 - [x] Estructura de carpetas según arquitectura definida
 - [x] Sistema de colores y tema basado en branding guide
@@ -19,6 +19,12 @@
 - [x] **Lógica de countdown con useEffect**
 - [x] **Componente TimerDisplay grande y claro**
 - [x] **Vibración al finalizar (Haptics)**
+- [x] **Integración expo-sqlite**
+- [x] **Esquema de base de datos completo**
+- [x] **CRUD de perfil de usuario**
+- [x] **Pantalla de configuración**
+- [x] **Preferencias (sonidos, vibraciones)**
+- [x] **Sistema de backup local**
 
 ### 🎨 Branding Aplicado:
 - **Logo**: SetFit logo como icono de app
@@ -34,9 +40,10 @@ src/
 ├── components/
 │   ├── common/        # Button, Card
 │   └── timer/         # TimerDisplay, TimerControls, TimeInput
-├── screens/           # TimerScreen
-├── hooks/             # useTimer (custom hook)
-├── constants/         # Tema, colores, configuración
+├── screens/           # TimerScreen, SettingsScreen
+├── hooks/             # useTimer, useDatabase, useSettings, useUserProfile
+├── utils/             # database.js (SQLite service)
+├── constants/         # Tema, colores, database schema
 └── navigation/        # (futuro)
 ```
 
@@ -47,6 +54,19 @@ src/
 - **Feedback háptico**: Vibración en últimos 3 segundos y al completar
 - **Estados visuales**: Colores que cambian según el estado del timer
 - **Responsive**: Adaptado para diferentes tamaños de pantalla
+
+### 🗄️ Sistema de Base de Datos:
+- **SQLite local**: Persistencia sin conexión a internet
+- **Esquema robusto**: Usuarios, estadísticas, sesiones, configuraciones
+- **CRUD completo**: Operaciones de lectura/escritura optimizadas
+- **Hooks especializados**: useDatabase, useSettings, useUserProfile
+- **Backup/Export**: Funcionalidad de exportación de datos
+
+### ⚙️ Sistema de Configuración:
+- **Pantalla de configuración**: Acceso desde botón en header
+- **Preferencias personalizables**: Sonidos, vibración, configuración del timer
+- **Perfil de usuario**: Nombre personalizable y estadísticas
+- **Gestión de datos**: Exportar y resetear datos completamente
 
 ### 📱 Build Status:
 - **EAS Build**: ✅ Configurado
@@ -66,13 +86,13 @@ eas build --platform android --profile preview  # APK de prueba
 eas build --platform android --profile production  # App Bundle para Play Store
 ```
 
-## 🎯 Próximos Pasos (Sprint 2):
-1. Sistema de usuarios con SQLite
-2. Persistencia de configuraciones
-3. Historial de entrenamientos
-4. Pantalla de estadísticas básicas
-5. Configuración de sonidos y preferencias
+## 🎯 Próximos Pasos (Sprint 3):
+1. Gestión de rutinas personalizadas
+2. Constructor drag & drop de ejercicios
+3. Sistema de bloques de ejercicio/descanso
+4. Grupos y series configurables
+5. Plantillas de rutinas predefinidas
 
 ---
 
-**Timer MVP funcional** 🎉 - Listo para pruebas y Sprint 2.
+**Sistema completo de persistencia** 🎉 - Listo para Sprint 3: Rutinas.
