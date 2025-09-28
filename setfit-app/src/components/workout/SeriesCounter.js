@@ -26,7 +26,11 @@ const SeriesCounter = memo(({
   const scale = useSharedValue(1);
 
   useEffect(() => {
-    opacity.value = withTiming(1, { duration: 500 });
+    try {
+      opacity.value = withTiming(1, { duration: 500 });
+    } catch (error) {
+      console.warn('Animation error:', error);
+    }
   }, [opacity]);
 
   useEffect(() => {
@@ -39,9 +43,14 @@ const SeriesCounter = memo(({
     onRepsChange?.(newReps);
 
     // Animation feedback
-    scale.value = withSpring(1.1, { damping: 20, stiffness: 300 }, () => {
-      scale.value = withSpring(1, { damping: 15, stiffness: 400 });
-    });
+    try {
+      scale.value = withSpring(1.1, { damping: 20, stiffness: 300 });
+      setTimeout(() => {
+        scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+      }, 150);
+    } catch (error) {
+      console.warn('Scale animation error:', error);
+    }
 
     // Check if set is complete
     const targetReps = block?.reps || 0;
@@ -71,6 +80,34 @@ const SeriesCounter = memo(({
       return targetReps > 0 ? Math.min((localReps / targetReps) * 100, 100) : 0;
     }
   };
+
+  const animatedDisplayStyle = useAnimatedStyle(() => {
+    try {
+      return {
+        opacity: opacity.value,
+        transform: [{ scale: scale.value }],
+      };
+    } catch (error) {
+      console.warn('Animated style error:', error);
+      return {
+        opacity: 1,
+        transform: [{ scale: 1 }],
+      };
+    }
+  });
+
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    try {
+      return {
+        opacity: opacity.value,
+      };
+    } catch (error) {
+      console.warn('Container style error:', error);
+      return {
+        opacity: 1,
+      };
+    }
+  });
 
   const renderTimeBased = () => (
     <View style={styles.timeBasedContainer}>

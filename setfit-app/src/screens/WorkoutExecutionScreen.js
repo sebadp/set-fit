@@ -435,7 +435,6 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
   if (isDatabaseLoading || !isDatabaseReady) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary} />
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Preparando entrenamiento...</Text>
           <Text style={styles.loadingSubtext}>Inicializando base de datos</Text>
