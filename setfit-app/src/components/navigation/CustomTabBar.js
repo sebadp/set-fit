@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,15 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../../constants/theme';
+import { createShadow } from '../../utils/platformStyles';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export const CustomTabBar = ({ state, descriptors, navigation }) => {
+  const { theme, mode } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const tabs = [
     { name: 'Home', icon: '🏠', label: 'Inicio' },
     { name: 'QuickStart', icon: '▶️', label: 'Entrenar', isCenter: true },
@@ -88,60 +92,53 @@ export const CustomTabBar = ({ state, descriptors, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  tabBar: {
-    flexDirection: 'row',
-    height: 75,
-    backgroundColor: theme.colors.surface,
-    borderTopWidth: 0,
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    paddingBottom: 10,
-    paddingTop: 8,
-  },
-  tab: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  tabIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  tabLabel: {
-    fontSize: 11,
-    ...theme.typography.caption,
-  },
-  centerButtonContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: -15,
-  },
-  centerButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#FF6B6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    marginBottom: 4,
-  },
-  centerButtonIcon: {
-    fontSize: 24,
-    color: 'white',
-  },
-  centerButtonLabel: {
-    fontSize: 11,
-    ...theme.typography.caption,
-    fontWeight: '600',
-  },
-});
+const createStyles = (theme) =>
+  StyleSheet.create({
+    tabBar: {
+      flexDirection: 'row',
+      height: 75,
+      backgroundColor: theme.colors.surface,
+      borderTopWidth: 0,
+      paddingBottom: 10,
+      paddingTop: 8,
+      ...createShadow({ offsetY: -3, blurRadius: 16, opacity: 0.1, elevation: 20 }),
+    },
+    tab: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    tabIcon: {
+      fontSize: 20,
+      marginBottom: 4,
+    },
+    tabLabel: {
+      fontSize: 11,
+      ...theme.typography.caption,
+    },
+    centerButtonContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: -15,
+    },
+    centerButton: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 4,
+      ...createShadow({ offsetY: 4, blurRadius: 20, opacity: 0.3, elevation: 8, color: '#FF6B6B' }),
+    },
+    centerButtonIcon: {
+      fontSize: 24,
+      color: 'white',
+    },
+    centerButtonLabel: {
+      fontSize: 11,
+      ...theme.typography.caption,
+      fontWeight: '600',
+    },
+  });

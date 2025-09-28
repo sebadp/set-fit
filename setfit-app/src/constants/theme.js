@@ -1,4 +1,5 @@
 import { colors } from './colors';
+import { createShadow } from '../utils/platformStyles';
 
 // Typography system based on branding guide
 export const typography = {
@@ -49,41 +50,65 @@ export const borderRadius = {
 
 // Shadows/Elevation
 export const shadows = {
-  card: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4, // Android
-  },
-  modal: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.16,
-    shadowRadius: 24,
-    elevation: 8, // Android
-  },
+  card: createShadow({ offsetY: 4, blurRadius: 12, opacity: 0.08, elevation: 4 }),
+  modal: createShadow({ offsetY: 8, blurRadius: 24, opacity: 0.16, elevation: 8 }),
 };
 
-// Default theme (dark mode first)
-export const theme = {
-  colors: {
-    primary: colors.setFlowGreen,
-    secondary: colors.restTeal,
-    accent: colors.focusIndigo,
-    warning: colors.warningAmber,
-    error: colors.alertRed,
-
-    background: colors.charcoal,
-    surface: colors.ink,
-    text: colors.paper,
-    textSecondary: colors.cloud,
-    textMuted: colors.slate,
-
-    border: colors.slate,
-  },
+const buildTheme = (palette) => ({
+  colors: palette,
   typography,
   spacing,
   borderRadius,
   shadows,
+});
+
+const darkPalette = {
+  primary: colors.setFlowGreen,
+  primaryDark: colors.setFlowGreen700,
+  secondary: colors.restTeal,
+  secondaryDark: '#0D9488',
+  accent: colors.focusIndigo,
+  accentDark: colors.focusIndigo700,
+  warning: colors.warningAmber,
+  error: colors.alertRed,
+  success: colors.setFlowGreen,
+
+  background: colors.charcoal,
+  surface: colors.ink,
+  text: colors.paper,
+  textSecondary: colors.cloud,
+  textMuted: colors.slate,
+  border: colors.slate,
+  overlay: 'rgba(11,18,32,0.75)',
 };
+
+const lightPalette = {
+  primary: colors.setFlowGreen,
+  primaryDark: colors.setFlowGreen700,
+  secondary: colors.restTeal,
+  secondaryDark: '#0D9488',
+  accent: colors.focusIndigo,
+  accentDark: colors.focusIndigo700,
+  warning: '#D97706',
+  error: colors.alertRed,
+  success: colors.setFlowGreen,
+
+  background: '#F7F8FA',
+  surface: colors.paper,
+  text: '#111827',
+  textSecondary: '#374151',
+  textMuted: '#6B7280',
+  border: '#D1D5DB',
+  overlay: 'rgba(255,255,255,0.85)',
+};
+
+export const darkTheme = buildTheme(darkPalette);
+export const lightTheme = buildTheme(lightPalette);
+
+export const themes = {
+  dark: darkTheme,
+  light: lightTheme,
+};
+
+// Legacy default export to keep backward compatibility during migration
+export const theme = darkTheme;

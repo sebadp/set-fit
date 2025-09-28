@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card } from '../common';
 import { theme } from '../../constants/theme';
+import { createShadow } from '../../utils/platformStyles';
 import {
   BLOCK_TYPES,
   EXERCISE_TYPES,
@@ -400,11 +401,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     margin: theme.spacing.lg,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    ...createShadow({ offsetY: 4, blurRadius: 20, opacity: 0.3, elevation: 6 }),
   },
   startButtonText: {
     ...theme.typography.h3,

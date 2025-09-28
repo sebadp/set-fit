@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from '../../constants/theme';
+import { createShadow } from '../../utils/platformStyles';
 
 export const QuickActionCard = ({
   title,
@@ -52,12 +53,8 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
     marginVertical: theme.spacing.sm,
+    ...createShadow({ offsetY: 2, blurRadius: 16, opacity: 0.2, elevation: 4 }),
   },
   gradient: {
     padding: theme.spacing.lg,

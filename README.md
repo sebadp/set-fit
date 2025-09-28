@@ -105,7 +105,7 @@ background: linear-gradient(135deg, #26DE81 0%, #20BF6B 100%);
 - **Base de Datos**: SQLite (local) → PostgreSQL (futuro)
 - **Estado**: Zustand o Context API
 - **Estilos**: NativeWind (Tailwind para RN) o StyleSheet
-- **Audio**: expo-av para sonidos
+- **Audio**: expo-audio para sonidos
 - **Animaciones**: Reanimated 3
 
 ---
@@ -263,7 +263,7 @@ id, routine_id, exercise_id, duration, rest_time, order_index, series
 **Objetivo**: Alertas y feedback inmersivo
 
 **Entregables**:
-- [ ] Sistema de sonidos con expo-av
+- [ ] Sistema de sonidos con expo-audio
 - [ ] Beeps de cuenta regresiva (3-2-1)
 - [ ] Sonidos diferenciados (ejercicio/descanso)
 - [ ] Vibración patterns diferentes
@@ -281,6 +281,9 @@ const sounds = {
 }
 ```
 
+Sprint adicional:
+. Onboarding
+. Menu inicial con UX diseñada
 ---
 
 ### **Sprint 7: Polish & Optimización** (5 días)
@@ -288,11 +291,9 @@ const sounds = {
 
 **Entregables**:
 - [ ] Animaciones con Reanimated 3
-- [ ] Modo oscuro
-- [ ] Onboarding interactivo
+- [ ] Modo oscuro/claro
 - [ ] Optimización de renderizado
 - [ ] Reducir bundle size
-- [ ] Testing E2E básico
 - [ ] Manejo de errores robusto
 
 ---

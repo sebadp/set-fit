@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,8 @@ import { WorkoutProgress } from '../components/workout/WorkoutProgress';
 import { WorkoutControls } from '../components/workout/WorkoutControls';
 import { SkipExerciseModal } from '../components/workout/SkipExerciseModal';
 import { WorkoutSummary } from '../components/workout/WorkoutSummary';
+import { VisualFeedback, FlashFeedback, CountdownCircle } from '../components/workout/VisualFeedback';
+import { audioService } from '../services/AudioService';
 
 export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const { routine, blocks: initialBlocks } = route.params;
@@ -39,6 +41,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
     currentTimer,
     totalElapsedTime,
     blocks,
+    setCurrentTimer,
     startWorkout,
     beginActiveWorkout,
     pauseWorkout,
@@ -66,8 +69,53 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const [skippedBlocks, setSkippedBlocks] = useState([]);
   const [estimatedTotalTime, setEstimatedTotalTime] = useState(0);
 
+  // Audiovisual feedback state
+  const [visualFeedback, setVisualFeedback] = useState('none');
+  const [isFlashVisible, setIsFlashVisible] = useState(false);
+  const [flashType, setFlashType] = useState('success');
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [countdownNumber, setCountdownNumber] = useState(3);
+
   const timerRef = useRef(null);
   const hasStartedWorkout = useRef(false);
+  const timeoutsRef = useRef([]);
+  const isMountedRef = useRef(true);
+  const showTransitionRef = useRef(showTransition);
+  const transitionTypeRef = useRef(transitionType);
+
+  useEffect(() => {
+    showTransitionRef.current = showTransition;
+  }, [showTransition]);
+
+  useEffect(() => {
+    transitionTypeRef.current = transitionType;
+  }, [transitionType]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current = [];
+    };
+  }, []);
+
+  const scheduleTimeout = useCallback((callback, ms) => {
+    const id = setTimeout(() => {
+      timeoutsRef.current = timeoutsRef.current.filter(timeoutId => timeoutId !== id);
+      if (!isMountedRef.current) return;
+      callback();
+    }, ms);
+    timeoutsRef.current.push(id);
+    return id;
+  }, []);
+
+  const delay = useCallback((ms) => new Promise(resolve => {
+    const id = setTimeout(() => {
+      timeoutsRef.current = timeoutsRef.current.filter(timeoutId => timeoutId !== id);
+      resolve();
+    }, ms);
+    timeoutsRef.current.push(id);
+  }), []);
 
   // Initialize workout on component mount (only when database is ready)
   useEffect(() => {
@@ -169,14 +217,78 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const showPreparationTransition = () => {
     setTransitionType('preparation');
     setShowTransition(true);
+
+    // Start preparation countdown with audio/visual feedback
+    startPreparationCountdown();
+  };
+
+  const triggerFlash = useCallback((type) => {
+    if (!isMountedRef.current) return;
+    setFlashType(type);
+    setIsFlashVisible(true);
+    scheduleTimeout(() => {
+      if (!isMountedRef.current) return;
+      setIsFlashVisible(false);
+    }, 300);
+  }, [scheduleTimeout]);
+
+  const startPreparationCountdown = useCallback(async () => {
+    try {
+      if (!isMountedRef.current) return;
+
+      setVisualFeedback('countdown');
+
+      await delay(1000);
+      if (!isMountedRef.current) return;
+
+      setShowCountdown(true);
+      setCountdownNumber(3);
+      await audioService.playCountdown(3);
+
+      await delay(1000);
+      if (!isMountedRef.current) return;
+
+      setCountdownNumber(2);
+      await audioService.playCountdown(2);
+
+      await delay(1000);
+      if (!isMountedRef.current) return;
+
+      setCountdownNumber(1);
+      await audioService.playCountdown(1);
+
+      await delay(1000);
+      if (!isMountedRef.current) return;
+
+      setShowCountdown(false);
+      setVisualFeedback('none');
+      await audioService.playExerciseStart();
+      triggerFlash('success');
+    } catch (error) {
+      console.error('Failed to run preparation countdown:', error);
+    }
+  }, [delay, triggerFlash]);
+
+  const handlePauseWorkout = async () => {
+    await audioService.playWorkoutPaused();
+    triggerFlash('warning');
+    await pauseWorkout();
+  };
+
+  const handleResumeWorkout = async () => {
+    await audioService.playWorkoutResumed();
+    triggerFlash('success');
+    await resumeWorkout();
   };
 
   const handleTransitionComplete = () => {
     setShowTransition(false);
 
-    if (transitionType === 'preparation') {
+    const currentTransition = transitionTypeRef.current;
+
+    if (currentTransition === 'preparation') {
       beginActiveWorkout();
-    } else if (transitionType === 'next_exercise' || transitionType === 'next_set') {
+    } else if (currentTransition === 'next_exercise' || currentTransition === 'next_set') {
       // Reset counters for new block/set
       setCurrentTimer(0);
       setCurrentReps(0);
@@ -185,66 +297,76 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
 
   const handleSetComplete = async () => {
     try {
-      // Haptic feedback
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      Vibration.vibrate(200);
+      await audioService.playSetComplete();
+      triggerFlash('success');
+      setVisualFeedback('pulse');
+
+      scheduleTimeout(() => {
+        if (!isMountedRef.current) return;
+        setVisualFeedback('none');
+      }, 1000);
 
       const currentBlock = getCurrentBlock();
       if (!currentBlock) return;
 
-      // Add to completed blocks if this was the last set
       if (currentSet >= (currentBlock.sets || 1)) {
         setCompletedBlocks(prev => [...prev, { ...currentBlock, completedAt: new Date() }]);
       }
 
-      // Check if we need rest between sets
       const needsRest = currentSet < (currentBlock.sets || 1) && (currentBlock.rest_between_sets || 0) > 0;
 
       if (needsRest) {
-        // Show rest transition
         setTransitionType('rest');
         setShowTransition(true);
+        setVisualFeedback('rest');
+        await audioService.playRestStart();
 
-        // Auto-complete rest after duration
-        setTimeout(() => {
-          if (showTransition) {
-            handleTransitionComplete();
-            nextAction();
-          }
-        }, (currentBlock.rest_between_sets || 0) * 1000);
-      } else {
-        // Move to next set or exercise
-        const isLastSet = currentSet >= (currentBlock.sets || 1);
-        const isLastBlock = currentBlockIndex >= blocks.length - 1;
-
-        if (isLastSet && isLastBlock) {
-          // Workout completed
-          await completeWorkout();
-        } else if (isLastSet) {
-          // Next exercise
-          const nextBlock = blocks[currentBlockIndex + 1];
-          setTransitionType('next_exercise');
-          setShowTransition(true);
-
-          setTimeout(() => {
-            if (showTransition) {
-              handleTransitionComplete();
-              nextAction();
-            }
-          }, 3000);
-        } else {
-          // Next set
-          setTransitionType('next_set');
-          setShowTransition(true);
-
-          setTimeout(() => {
-            if (showTransition) {
-              handleTransitionComplete();
-              nextAction();
-            }
-          }, 2000);
-        }
+        const restDurationMs = (currentBlock.rest_between_sets || 0) * 1000;
+        scheduleTimeout(() => {
+          if (!isMountedRef.current || !showTransitionRef.current) return;
+          setVisualFeedback('none');
+          handleTransitionComplete();
+          nextAction().catch(error => console.error('Failed to advance after rest:', error));
+        }, restDurationMs);
+        return;
       }
+
+      const isLastSet = currentSet >= (currentBlock.sets || 1);
+      const isLastBlock = currentBlockIndex >= blocks.length - 1;
+
+      if (isLastSet && isLastBlock) {
+        setVisualFeedback('complete');
+        await audioService.playWorkoutComplete();
+        triggerFlash('success');
+
+        scheduleTimeout(() => {
+          if (!isMountedRef.current) return;
+          setVisualFeedback('none');
+          completeWorkout().catch(error => console.error('Failed to complete workout:', error));
+        }, 2000);
+        return;
+      }
+
+      if (isLastSet) {
+        setTransitionType('next_exercise');
+        setShowTransition(true);
+
+        scheduleTimeout(() => {
+          if (!isMountedRef.current || !showTransitionRef.current) return;
+          handleTransitionComplete();
+          nextAction().catch(error => console.error('Failed to advance to next exercise:', error));
+        }, 3000);
+        return;
+      }
+
+      setTransitionType('next_set');
+      setShowTransition(true);
+
+      scheduleTimeout(() => {
+        if (!isMountedRef.current || !showTransitionRef.current) return;
+        handleTransitionComplete();
+        nextAction().catch(error => console.error('Failed to advance to next set:', error));
+      }, 2000);
     } catch (error) {
       console.error('Error completing set:', error);
     }
@@ -252,7 +374,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
 
   const handleSkipSet = () => {
     setShowSkipModal(false);
-    nextAction();
+    nextAction().catch(error => console.error('Failed to skip set:', error));
   };
 
   const handleSkipExercise = () => {
@@ -261,7 +383,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
       setSkippedBlocks(prev => [...prev, { ...currentBlock, skippedAt: new Date() }]);
     }
     setShowSkipModal(false);
-    skipExercise();
+    skipExercise().catch(error => console.error('Failed to skip exercise:', error));
   };
 
   const handleWorkoutExit = () => {
@@ -376,8 +498,8 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
         <View style={styles.controlsFooter}>
           <WorkoutControls
             workoutState={workoutState}
-            onPause={pauseWorkout}
-            onResume={resumeWorkout}
+            onPause={handlePauseWorkout}
+            onResume={handleResumeWorkout}
             onSkip={() => setShowSkipModal(true)}
             onStop={handleWorkoutExit}
             onComplete={handleWorkoutComplete}
@@ -411,6 +533,35 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
         onSkipExercise={handleSkipExercise}
         onCancel={() => setShowSkipModal(false)}
       />
+
+      {/* Visual Feedback Overlays */}
+      <VisualFeedback
+        feedbackType={visualFeedback}
+        isActive={visualFeedback !== 'none'}
+        style={styles.visualFeedback}
+      />
+
+      {/* Flash Feedback */}
+      {isFlashVisible && (
+        <FlashFeedback
+          feedbackType={flashType}
+          onComplete={() => {
+            if (isMountedRef.current) {
+              setIsFlashVisible(false);
+            }
+          }}
+        />
+      )}
+
+      {/* Countdown Circle */}
+      {showCountdown && (
+        <View style={styles.countdownContainer}>
+          <CountdownCircle
+            count={countdownNumber}
+            size={120}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -460,5 +611,19 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.textSecondary,
     textAlign: 'center',
+  },
+  visualFeedback: {
+    zIndex: 5,
+  },
+  countdownContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 15,
+    pointerEvents: 'none',
   },
 });

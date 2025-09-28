@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '../../constants/theme';
+import { createShadow } from '../../utils/platformStyles';
 import {
   BLOCK_TYPES,
   EXERCISE_TYPES,
@@ -265,11 +266,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...createShadow({ offsetY: 2, blurRadius: 12, opacity: 0.1, elevation: 3 }),
   },
   content: {
     padding: theme.spacing.md,

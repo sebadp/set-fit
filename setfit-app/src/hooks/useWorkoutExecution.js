@@ -337,6 +337,9 @@ export const useWorkoutExecution = () => {
     totalElapsedTime,
     blocks,
 
+    // Setters
+    setCurrentTimer,
+
     // Actions
     startWorkout,
     beginActiveWorkout,

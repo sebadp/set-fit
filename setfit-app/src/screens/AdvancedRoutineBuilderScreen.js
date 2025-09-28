@@ -491,7 +491,6 @@ const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: theme.colors.surface,
     elevation: 0,
-    shadowOpacity: 0,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },

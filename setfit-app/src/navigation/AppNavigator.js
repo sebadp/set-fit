@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Tab Screens
 import { HomeScreen } from '../screens/tabs/HomeScreen';
@@ -14,6 +17,9 @@ import { RoutinesScreen } from '../screens/RoutinesScreen';
 import { CreateRoutineScreen } from '../screens/CreateRoutineScreen';
 import { WorkoutExecutionScreen } from '../screens/WorkoutExecutionScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+
+// Onboarding
+import { OnboardingScreen } from '../screens/OnboardingScreen';
 
 // Navigation Components
 import { CustomTabBar } from '../components/navigation/CustomTabBar';
@@ -111,9 +117,55 @@ const TabNavigator = () => (
 
 // Root Navigator
 export const AppNavigator = () => {
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(null);
+  const { theme, mode } = useTheme();
+
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const onboardingComplete = await AsyncStorage.getItem('onboarding_completed');
+      setIsOnboardingComplete(onboardingComplete === 'true');
+    } catch (error) {
+      console.warn('Failed to check onboarding status:', error);
+      setIsOnboardingComplete(false);
+    }
+  };
+
+  // Show loading while checking onboarding status
+  if (isOnboardingComplete === null) {
+    return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
+  }
+
+  const navigationTheme = useMemo(
+    () => ({
+      dark: mode === 'dark',
+      colors: {
+        background: theme.colors.background,
+        card: theme.colors.surface,
+        border: theme.colors.border,
+        primary: theme.colors.primary,
+        text: theme.colors.text,
+        notification: theme.colors.accent,
+      },
+    }),
+    [theme, mode]
+  );
+
   return (
-    <NavigationContainer>
-      <TabNavigator />
+    <NavigationContainer theme={navigationTheme}>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!isOnboardingComplete ? (
+          <Stack.Screen
+            name="Onboarding"
+            component={OnboardingScreen}
+            options={{ gestureEnabled: false }}
+          />
+        ) : null}
+        <Stack.Screen name="Main" component={TabNavigator} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };

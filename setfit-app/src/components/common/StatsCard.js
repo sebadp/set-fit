@@ -5,6 +5,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { theme } from '../../constants/theme';
+import { createShadow } from '../../utils/platformStyles';
 
 export const StatsCard = ({
   weeklyWorkouts = 0,
@@ -57,11 +58,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
     marginVertical: theme.spacing.md,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    ...createShadow({ offsetY: 1, blurRadius: 8, opacity: 0.1, elevation: 2 }),
   },
   title: {
     ...theme.typography.h3,

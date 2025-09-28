@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback, memo } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
 import { Card } from '../common';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useThemedStyles } from '../../hooks/useThemedStyles';
+import { createShadow } from '../../utils/platformStyles';
 import { EXERCISE_TYPES, formatDuration } from '../../models/routines';
 
-export const SeriesCounter = ({
+const SeriesCounter = memo(({
   block,
   currentSet,
   totalSets,
@@ -16,60 +19,48 @@ export const SeriesCounter = ({
   onTimerChange,
   style,
 }) => {
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const [localReps, setLocalReps] = useState(currentRep);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(1);
 
   useEffect(() => {
-    // Entrance animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+    opacity.value = withTiming(1, { duration: 500 });
+  }, [opacity]);
 
   useEffect(() => {
     setLocalReps(currentRep);
   }, [currentRep]);
 
-  const handleRepIncrement = () => {
+  const handleRepIncrement = useCallback(() => {
     const newReps = localReps + 1;
     setLocalReps(newReps);
     onRepsChange?.(newReps);
 
     // Animation feedback
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    scale.value = withSpring(1.1, { damping: 20, stiffness: 300 }, () => {
+      scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+    });
 
     // Check if set is complete
     const targetReps = block?.reps || 0;
     if (targetReps > 0 && newReps >= targetReps) {
       setTimeout(() => onSetComplete?.(), 500);
     }
-  };
+  }, [localReps, onRepsChange, onSetComplete, block?.reps, scale]);
 
-  const handleRepDecrement = () => {
+  const handleRepDecrement = useCallback(() => {
     if (localReps > 0) {
       const newReps = localReps - 1;
       setLocalReps(newReps);
       onRepsChange?.(newReps);
     }
-  };
+  }, [localReps, onRepsChange]);
 
-  const handleSetComplete = () => {
+  const handleSetComplete = useCallback(() => {
     onSetComplete?.();
-  };
+  }, [onSetComplete]);
 
   const getProgressPercentage = () => {
     if (isTimeBased) {
@@ -128,15 +119,7 @@ export const SeriesCounter = ({
           <Text style={styles.repButtonText}>−</Text>
         </TouchableOpacity>
 
-        <Animated.View
-          style={[
-            styles.repDisplay,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
+        <Animated.View style={[styles.repDisplay, animatedDisplayStyle]}>
           <Text style={styles.repCount}>{localReps}</Text>
           <Text style={styles.repTarget}>
             {block?.reps ? `/ ${block.reps}` : ''}
@@ -184,7 +167,7 @@ export const SeriesCounter = ({
   );
 
   return (
-    <Animated.View style={[styles.container, style, { opacity: fadeAnim }]}>
+    <Animated.View style={[styles.container, style, animatedContainerStyle]}>
       <Card style={styles.card}>
         {/* Header */}
         <View style={styles.header}>
@@ -247,9 +230,11 @@ export const SeriesCounter = ({
       </Card>
     </Animated.View>
   );
-};
+});
 
-const styles = StyleSheet.create({
+export { SeriesCounter };
+
+const createStyles = (theme) => ({
   container: {
     flex: 1,
   },
@@ -357,11 +342,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    ...createShadow({ offsetY: 2, blurRadius: 12, opacity: 0.2, elevation: 4 }),
   },
   repButtonText: {
     ...theme.typography.h1,

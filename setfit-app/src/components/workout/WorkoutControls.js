@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Card, Button } from '../common';
 import { theme } from '../../constants/theme';
+import { createShadow } from '../../utils/platformStyles';
 import { WORKOUT_STATES } from '../../hooks/useWorkoutExecution';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
 
 export const WorkoutControls = ({
   workoutState,
@@ -18,25 +20,22 @@ export const WorkoutControls = ({
   style,
 }) => {
   const [showStopConfirm, setShowStopConfirm] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(-100)).current;
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(-40);
 
   useEffect(() => {
-    // Entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 100,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+    opacity.value = withTiming(1, { duration: 450 });
+    translateY.value = withSpring(0, {
+      damping: 14,
+      stiffness: 140,
+      overshootClamping: false,
+    });
+  }, [opacity, translateY]);
+
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
 
   const handlePause = () => {
     onPause?.();
@@ -215,16 +214,7 @@ export const WorkoutControls = ({
   );
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        style,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
+    <Animated.View style={[styles.container, style, animatedContainerStyle]}>
       <Card style={styles.card}>
         {/* State Header */}
         <View style={[styles.header, { backgroundColor: `${stateInfo.color}15` }]}>
@@ -307,11 +297,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     gap: theme.spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    ...createShadow({ offsetY: 4, blurRadius: 20, opacity: 0.3, elevation: 6 }),
   },
   primaryButtonIcon: {
     fontSize: 24,
@@ -338,11 +324,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    ...createShadow({ offsetY: 4, blurRadius: 20, opacity: 0.3, elevation: 6 }),
   },
   completeButtonText: {
     ...theme.typography.h2,

@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch, TextInput, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Card, Button } from '../components/common';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { useThemedStyles } from '../hooks/useThemedStyles';
 import { useSettings, useUserProfile, useDatabase } from '../hooks/useDatabase';
 import { SETTING_KEYS } from '../constants/database';
 
 export const SettingsScreen = ({ onBack }) => {
+  const { theme, mode, toggleTheme } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const { database } = useDatabase();
   const { user, updateUser } = useUserProfile();
   const { settings, updateSetting, loading } = useSettings();
@@ -69,18 +72,18 @@ export const SettingsScreen = ({ onBack }) => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <StatusBar style="light" />
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
         <View style={styles.loading}>
-          <Text style={styles.loadingText}>Cargando configuración...</Text>
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Cargando configuración...</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
@@ -115,6 +118,21 @@ export const SettingsScreen = ({ onBack }) => {
               onPress={handleUpdateName}
               size="small"
               style={styles.saveButton}
+            />
+          </View>
+        </Card>
+
+        {/* Appearance */}
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Apariencia</Text>
+
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Tema oscuro</Text>
+            <Switch
+              value={mode === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              thumbColor={theme.colors.paper}
             />
           </View>
         </Card>
@@ -199,7 +217,7 @@ export const SettingsScreen = ({ onBack }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
