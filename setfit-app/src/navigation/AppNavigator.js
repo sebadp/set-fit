@@ -120,6 +120,22 @@ export const AppNavigator = () => {
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(null);
   const { theme, mode } = useTheme();
 
+  // Always call useMemo at the same point in render cycle
+  const navigationTheme = useMemo(
+    () => ({
+      dark: mode === 'dark',
+      colors: {
+        background: theme.colors.background,
+        card: theme.colors.surface,
+        border: theme.colors.border,
+        primary: theme.colors.primary,
+        text: theme.colors.text,
+        notification: theme.colors.accent,
+      },
+    }),
+    [theme, mode]
+  );
+
   useEffect(() => {
     checkOnboardingStatus();
   }, []);
@@ -138,21 +154,6 @@ export const AppNavigator = () => {
   if (isOnboardingComplete === null) {
     return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
   }
-
-  const navigationTheme = useMemo(
-    () => ({
-      dark: mode === 'dark',
-      colors: {
-        background: theme.colors.background,
-        card: theme.colors.surface,
-        border: theme.colors.border,
-        primary: theme.colors.primary,
-        text: theme.colors.text,
-        notification: theme.colors.accent,
-      },
-    }),
-    [theme, mode]
-  );
 
   return (
     <NavigationContainer theme={navigationTheme}>
