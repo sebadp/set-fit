@@ -37,6 +37,7 @@ export const useDatabase = () => {
     error,
     retryInit,
     database,
+    db: database.db,
   };
 };
 
