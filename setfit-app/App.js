@@ -1,6 +1,6 @@
 import React from 'react';
-import { TimerScreen } from './src/screens/TimerScreen';
+import { AppNavigator } from './src/navigation/AppNavigator';
 
 export default function App() {
-  return <TimerScreen />;
+  return <AppNavigator />;
 }

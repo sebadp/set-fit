@@ -143,6 +143,7 @@ export const SETTING_KEYS = {
   AUTO_START_NEXT: 'auto_start_next',
   THEME: 'theme',
   LANGUAGE: 'language',
+  USER_NAME: 'user_name',
 };
 
 // Indexes for better performance
