@@ -89,17 +89,39 @@ export const useWorkoutExecution = () => {
 
   // Begin active workout (after preparation)
   const beginActiveWorkout = useCallback(() => {
-    if (workoutState !== WORKOUT_STATES.PREPARING) return;
+    try {
+      console.log('beginActiveWorkout called, current state:', workoutState);
 
-    setWorkoutState(WORKOUT_STATES.ACTIVE);
-    startTimeRef.current = Date.now();
+      if (workoutState !== WORKOUT_STATES.PREPARING) {
+        console.warn('Cannot begin active workout, invalid state:', workoutState);
+        return;
+      }
 
-    // Start main timer
-    timerRef.current = setInterval(() => {
-      const now = Date.now();
-      const elapsed = Math.floor((now - startTimeRef.current) / 1000);
-      setTotalElapsedTime(elapsed);
-    }, 1000);
+      // Clear any existing timer first
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+
+      setWorkoutState(WORKOUT_STATES.ACTIVE);
+      startTimeRef.current = Date.now();
+
+      // Start main timer
+      timerRef.current = setInterval(() => {
+        try {
+          const now = Date.now();
+          const elapsed = Math.floor((now - startTimeRef.current) / 1000);
+          setTotalElapsedTime(elapsed);
+        } catch (timerError) {
+          console.error('Timer error:', timerError);
+        }
+      }, 1000);
+
+      console.log('Active workout started successfully');
+    } catch (error) {
+      console.error('Error in beginActiveWorkout:', error);
+      throw error;
+    }
   }, [workoutState]);
 
   // Pause workout

@@ -20,7 +20,7 @@ import {
   getCategoryIcon,
 } from '../models/routines';
 
-export const RoutinesScreen = ({ onBack, onCreateRoutine, onEditRoutine, onPlayRoutine, onStartWorkout }) => {
+export const RoutinesScreen = ({ navigation, onBack, onCreateRoutine, onEditRoutine, onPlayRoutine, onStartWorkout }) => {
   const [routines, setRoutines] = useState([]);
   const [filteredRoutines, setFilteredRoutines] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -134,6 +134,29 @@ export const RoutinesScreen = ({ onBack, onCreateRoutine, onEditRoutine, onPlayR
   const handleRefresh = () => {
     setRefreshing(true);
     loadRoutines();
+  };
+
+  const handlePlayRoutine = async (routine) => {
+    try {
+      console.log('Playing routine:', routine.name);
+
+      // Load routine blocks/exercises
+      const blocks = await database.getRoutineBlocks(routine.id);
+
+      if (!blocks || blocks.length === 0) {
+        Alert.alert('⚠️ Rutina Vacía', 'Esta rutina no tiene ejercicios configurados');
+        return;
+      }
+
+      // Navigate to workout execution
+      navigation.navigate('WorkoutExecution', {
+        routine,
+        blocks
+      });
+    } catch (error) {
+      console.error('Error starting routine workout:', error);
+      Alert.alert('❌ Error', 'No se pudo iniciar el entrenamiento');
+    }
   };
 
   // Load routines on mount

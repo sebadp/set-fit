@@ -292,7 +292,13 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
     const currentTransition = transitionTypeRef.current;
 
     if (currentTransition === 'preparation') {
-      beginActiveWorkout();
+      try {
+        console.log('Starting active workout...');
+        beginActiveWorkout();
+      } catch (error) {
+        console.error('Failed to begin active workout:', error);
+        Alert.alert('Error', 'No se pudo iniciar el entrenamiento activo');
+      }
     } else if (currentTransition === 'next_exercise' || currentTransition === 'next_set') {
       // Reset counters for new block/set
       setCurrentTimer(0);
