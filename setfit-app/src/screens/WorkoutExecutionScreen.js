@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 // Removed React Navigation imports since we're using conditional navigation
 import * as Haptics from 'expo-haptics';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { useThemedStyles } from '../hooks/useThemedStyles';
 import { useWorkoutExecution, WORKOUT_STATES } from '../hooks/useWorkoutExecution';
 import { EXERCISE_TYPES, formatDuration } from '../models/routines';
 import { useDatabase } from '../hooks/useDatabase';
@@ -28,6 +29,10 @@ import { audioService } from '../services/AudioService';
 
 export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const { routine, blocks: initialBlocks } = route.params;
+
+  // Theme hooks
+  const { theme, mode } = useTheme();
+  const styles = useThemedStyles(createStyles);
 
   // Database hook
   const { isReady: isDatabaseReady, isLoading: isDatabaseLoading } = useDatabase();
@@ -566,7 +571,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
