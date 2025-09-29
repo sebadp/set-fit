@@ -73,6 +73,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const [completedBlocks, setCompletedBlocks] = useState([]);
   const [skippedBlocks, setSkippedBlocks] = useState([]);
   const [estimatedTotalTime, setEstimatedTotalTime] = useState(0);
+  const [runtimeError, setRuntimeError] = useState(null);
 
   // Audiovisual feedback state
   const [visualFeedback, setVisualFeedback] = useState('none');
@@ -87,6 +88,59 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
   const isMountedRef = useRef(true);
   const showTransitionRef = useRef(showTransition);
   const transitionTypeRef = useRef(transitionType);
+  const errorAlertVisibleRef = useRef(false);
+
+  const reportError = useCallback((context, error) => {
+    if (!error) {
+      error = new Error('Unknown error');
+    }
+
+    const normalizedError = error instanceof Error ? error : new Error(String(error));
+    console.error(`[WorkoutExecution] ${context} failed:`, normalizedError);
+
+    setRuntimeError({
+      context,
+      message: normalizedError.message,
+      stack: normalizedError.stack,
+      timestamp: Date.now(),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!runtimeError || errorAlertVisibleRef.current) {
+      return;
+    }
+
+    errorAlertVisibleRef.current = true;
+
+    const { context, message } = runtimeError;
+    const stackPreview = runtimeError.stack?.split('\n')?.[1]?.trim();
+    const details = stackPreview ? `\n\nDetalle: ${stackPreview}` : '';
+
+    Alert.alert(
+      'Error en el entrenamiento',
+      `Ocurrió un problema durante "${context}":\n${message}${details}`,
+      [
+        {
+          text: 'Cerrar rutina',
+          style: 'destructive',
+          onPress: () => {
+            errorAlertVisibleRef.current = false;
+            setRuntimeError(null);
+            navigation?.goBack?.();
+          },
+        },
+        {
+          text: 'Continuar aquí',
+          onPress: () => {
+            errorAlertVisibleRef.current = false;
+            setRuntimeError(null);
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  }, [runtimeError, navigation]);
 
   useEffect(() => {
     showTransitionRef.current = showTransition;
@@ -253,12 +307,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
       await startWorkout(routine, normalizedBlocks);
       showPreparationTransition();
     } catch (error) {
-      console.error('Failed to initialize workout:', error);
-      Alert.alert(
-        'Error',
-        `No se pudo iniciar el entrenamiento: ${error.message}`,
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
+      reportError('inicializar entrenamiento', error);
     }
   };
 
@@ -313,20 +362,28 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
       await audioService.playExerciseStart();
       triggerFlash('success');
     } catch (error) {
-      console.error('Failed to run preparation countdown:', error);
+      reportError('preparation countdown', error);
     }
-  }, [delay, triggerFlash]);
+  }, [delay, triggerFlash, reportError]);
 
   const handlePauseWorkout = async () => {
-    await audioService.playWorkoutPaused();
-    triggerFlash('warning');
-    await pauseWorkout();
+    try {
+      await audioService.playWorkoutPaused();
+      triggerFlash('warning');
+      await pauseWorkout();
+    } catch (error) {
+      reportError('pausar entrenamiento', error);
+    }
   };
 
   const handleResumeWorkout = async () => {
-    await audioService.playWorkoutResumed();
-    triggerFlash('success');
-    await resumeWorkout();
+    try {
+      await audioService.playWorkoutResumed();
+      triggerFlash('success');
+      await resumeWorkout();
+    } catch (error) {
+      reportError('reanudar entrenamiento', error);
+    }
   };
 
   const handleTransitionComplete = () => {
@@ -339,8 +396,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
         console.log('Starting active workout...');
         beginActiveWorkout();
       } catch (error) {
-        console.error('Failed to begin active workout:', error);
-        Alert.alert('Error', 'No se pudo iniciar el entrenamiento activo');
+        reportError('iniciar entrenamiento activo', error);
       }
     } else if (currentTransition === 'next_exercise' || currentTransition === 'next_set') {
       // Reset counters for new block/set
@@ -380,7 +436,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
           if (!isMountedRef.current || !showTransitionRef.current) return;
           setVisualFeedback('none');
           handleTransitionComplete();
-          nextAction().catch(error => console.error('Failed to advance after rest:', error));
+          nextAction().catch(error => reportError('avanzar tras descanso', error));
         }, restDurationMs);
         return;
       }
@@ -396,7 +452,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
         scheduleTimeout(() => {
           if (!isMountedRef.current) return;
           setVisualFeedback('none');
-          completeWorkout().catch(error => console.error('Failed to complete workout:', error));
+          completeWorkout().catch(error => reportError('completar entrenamiento', error));
         }, 2000);
         return;
       }
@@ -408,7 +464,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
         scheduleTimeout(() => {
           if (!isMountedRef.current || !showTransitionRef.current) return;
           handleTransitionComplete();
-          nextAction().catch(error => console.error('Failed to advance to next exercise:', error));
+          nextAction().catch(error => reportError('avanzar al siguiente ejercicio', error));
         }, 3000);
         return;
       }
@@ -419,16 +475,16 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
       scheduleTimeout(() => {
         if (!isMountedRef.current || !showTransitionRef.current) return;
         handleTransitionComplete();
-        nextAction().catch(error => console.error('Failed to advance to next set:', error));
+        nextAction().catch(error => reportError('avanzar a la siguiente serie', error));
       }, 2000);
     } catch (error) {
-      console.error('Error completing set:', error);
+      reportError('completar serie', error);
     }
   };
 
   const handleSkipSet = () => {
     setShowSkipModal(false);
-    nextAction().catch(error => console.error('Failed to skip set:', error));
+    nextAction().catch(error => reportError('saltear serie', error));
   };
 
   const handleSkipExercise = () => {
@@ -437,7 +493,7 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
       setSkippedBlocks(prev => [...prev, { ...currentBlock, skippedAt: new Date() }]);
     }
     setShowSkipModal(false);
-    skipExercise().catch(error => console.error('Failed to skip exercise:', error));
+    skipExercise().catch(error => reportError('saltear ejercicio', error));
   };
 
   const handleWorkoutExit = () => {
@@ -450,8 +506,13 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
           text: 'Salir',
           style: 'destructive',
           onPress: async () => {
-            await stopWorkout();
-            navigation.goBack();
+            try {
+              await stopWorkout();
+            } catch (error) {
+              reportError('detener entrenamiento', error);
+            } finally {
+              navigation?.goBack?.();
+            }
           },
         },
       ]
