@@ -74,18 +74,7 @@ export const RoutinesScreen = ({ navigation, onBack, onCreateRoutine, onEditRout
     setFilteredRoutines(filtered);
   };
 
-  // Handle routine actions
-  const handlePlayRoutine = async (routine) => {
-    try {
-      // Update usage count and last used
-      await database.updateRoutineUsage(routine.id);
-      await loadRoutines(); // Refresh the list
-      onPlayRoutine?.(routine);
-    } catch (error) {
-      console.error('Error updating routine usage:', error);
-      onPlayRoutine?.(routine); // Still allow playing even if update fails
-    }
-  };
+  // Handle routine actions - removed duplicate function
 
   const handleDuplicateRoutine = async (routine) => {
     try {
@@ -140,6 +129,15 @@ export const RoutinesScreen = ({ navigation, onBack, onCreateRoutine, onEditRout
     try {
       console.log('Playing routine:', routine.name);
 
+      // Update usage count and last used
+      try {
+        await database.updateRoutineUsage(routine.id);
+        await loadRoutines(); // Refresh the list
+      } catch (usageError) {
+        console.warn('Error updating routine usage:', usageError);
+        // Continue anyway
+      }
+
       // Load routine blocks/exercises
       const blocks = await database.getRoutineBlocks(routine.id);
 
@@ -148,11 +146,25 @@ export const RoutinesScreen = ({ navigation, onBack, onCreateRoutine, onEditRout
         return;
       }
 
-      // Navigate to workout execution
-      navigation.navigate('WorkoutExecution', {
-        routine,
-        blocks
-      });
+      if (onStartWorkout) {
+        onStartWorkout(routine, blocks);
+        return;
+      }
+
+      if (onPlayRoutine) {
+        onPlayRoutine(routine);
+        return;
+      }
+
+      if (navigation?.navigate) {
+        navigation.navigate('WorkoutExecution', {
+          routine,
+          blocks
+        });
+        return;
+      }
+
+      console.warn('No navigation or callback available to start routine workout');
     } catch (error) {
       console.error('Error starting routine workout:', error);
       Alert.alert('❌ Error', 'No se pudo iniciar el entrenamiento');
