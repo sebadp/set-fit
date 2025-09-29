@@ -14,7 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
 import { useThemedStyles } from '../hooks/useThemedStyles';
 import { useWorkoutExecution, WORKOUT_STATES } from '../hooks/useWorkoutExecution';
-import { EXERCISE_TYPES, formatDuration } from '../models/routines';
+import { EXERCISE_TYPES, BLOCK_TYPES } from '../models/routines';
 import { useDatabase } from '../hooks/useDatabase';
 
 // Workout Components
@@ -195,6 +195,43 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
     }
   }, [blocks]);
 
+  const normalizeBlocks = useCallback((rawBlocks = []) => {
+    return rawBlocks
+      .filter(block => !!block)
+      .map((block, index) => {
+        const normalized = { ...block };
+
+        // Default type for legacy/quick blocks
+        normalized.type = normalized.type || BLOCK_TYPES.EXERCISE;
+        normalized.order = normalized.order ?? index;
+
+        const ensureNumber = (value, fallback) => {
+          const numeric = Number(value);
+          return Number.isFinite(numeric) ? numeric : fallback;
+        };
+
+        if (normalized.type === BLOCK_TYPES.EXERCISE) {
+          normalized.exercise_name = normalized.exercise_name || normalized.name || `Ejercicio ${index + 1}`;
+          const inferredType = normalized.reps ? EXERCISE_TYPES.REP_BASED : EXERCISE_TYPES.TIME_BASED;
+          normalized.exercise_type = normalized.exercise_type || inferredType;
+
+          normalized.sets = ensureNumber(normalized.sets, 1) || 1;
+          normalized.rest_between_sets = ensureNumber(normalized.rest_between_sets, 0) || 0;
+
+          if (normalized.exercise_type === EXERCISE_TYPES.TIME_BASED) {
+            normalized.duration = ensureNumber(normalized.duration, 0) || 0;
+          } else if (normalized.exercise_type === EXERCISE_TYPES.REP_BASED) {
+            normalized.reps = ensureNumber(normalized.reps, 0) || 0;
+          }
+        } else if (normalized.type === BLOCK_TYPES.REST) {
+          normalized.exercise_name = normalized.exercise_name || normalized.name || 'Descanso';
+          normalized.duration = ensureNumber(normalized.duration, 30) || 30;
+        }
+
+        return normalized;
+      });
+  }, []);
+
   const initializeWorkout = async () => {
     try {
       console.log('Initializing workout with:', { routine: routine?.name, blocksCount: initialBlocks?.length });
@@ -207,7 +244,13 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
         throw new Error('No exercise blocks provided');
       }
 
-      await startWorkout(routine, initialBlocks);
+      const normalizedBlocks = normalizeBlocks(initialBlocks);
+
+      if (!normalizedBlocks.length) {
+        throw new Error('No valid exercise blocks available');
+      }
+
+      await startWorkout(routine, normalizedBlocks);
       showPreparationTransition();
     } catch (error) {
       console.error('Failed to initialize workout:', error);

@@ -139,7 +139,14 @@ export const RoutinesScreen = ({ navigation, onBack, onCreateRoutine, onEditRout
       }
 
       // Load routine blocks/exercises
-      const blocks = await database.getRoutineBlocks(routine.id);
+      const blocks = (() => {
+        try {
+          return JSON.parse(routine.blocks_json || '[]');
+        } catch (parseError) {
+          console.warn('Failed to parse routine blocks_json:', parseError);
+          return [];
+        }
+      })();
 
       if (!blocks || blocks.length === 0) {
         Alert.alert('⚠️ Rutina Vacía', 'Esta rutina no tiene ejercicios configurados');
