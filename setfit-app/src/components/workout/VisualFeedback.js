@@ -35,7 +35,7 @@ export const VisualFeedback = ({
     Animated.timing(opacityAnim, {
       toValue: 0.3 * intensity,
       duration: 200,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
 
     // Different animations for different types
@@ -59,15 +59,17 @@ export const VisualFeedback = ({
   };
 
   const stopFeedbackAnimation = () => {
-    Animated.timing(opacityAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-
+    // Stop all animations first
     pulseAnim.stopAnimation();
     scaleAnim.stopAnimation();
     colorAnim.stopAnimation();
+    opacityAnim.stopAnimation();
+
+    // Reset to default values
+    pulseAnim.setValue(1);
+    scaleAnim.setValue(1);
+    colorAnim.setValue(0);
+    opacityAnim.setValue(0);
   };
 
   const startCountdownAnimation = () => {
@@ -206,8 +208,7 @@ export const VisualFeedback = ({
         {
           opacity: opacityAnim,
           transform: [
-            { scale: scaleAnim },
-            { scale: pulseAnim },
+            { scale: Animated.multiply(scaleAnim, pulseAnim) },
           ],
         },
         style,

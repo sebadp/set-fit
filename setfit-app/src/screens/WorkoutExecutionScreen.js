@@ -593,19 +593,18 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
 
         {/* Main Exercise Content */}
         <View style={styles.exerciseContent}>
-          {/* TEMPORARILY DISABLED FOR TESTING - SeriesCounter removed */
-          currentBlock && workoutState !== WORKOUT_STATES.PREPARING && (
-            <View style={styles.seriesCounter}>
-              <Text style={{color: 'white', textAlign: 'center', padding: 20}}>
-                [TEST] SeriesCounter disabled
-              </Text>
-              <Text style={{color: 'gray', textAlign: 'center'}}>
-                Block: {currentBlock?.exercise_name || 'Unknown'}
-              </Text>
-              <Text style={{color: 'gray', textAlign: 'center'}}>
-                Set: {currentSet} / {currentBlock?.sets || 1}
-              </Text>
-            </View>
+          {currentBlock && workoutState !== WORKOUT_STATES.PREPARING && (
+            <SeriesCounter
+              block={currentBlock}
+              currentSet={currentSet}
+              totalSets={currentBlock.sets || 1}
+              currentRep={currentReps}
+              isTimeBased={isTimeBased}
+              timer={currentTimer}
+              onSetComplete={handleSetComplete}
+              onRepsChange={setCurrentReps}
+              style={styles.seriesCounter}
+            />
           )}
         </View>
 

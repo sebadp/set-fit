@@ -21,8 +21,8 @@ class AudioService {
     this.sounds = new Map();
     this.isInitialized = false;
     this.volumeLevel = 1.0;
-    this.soundsEnabled = false;
-    this.vibrationsEnabled = false;
+    this.soundsEnabled = true;
+    this.vibrationsEnabled = true;
     this.init();
   }
 
@@ -105,9 +105,36 @@ class AudioService {
   }
 
   async playSound(soundName, options = {}) {
-    // TEMPORARILY DISABLED FOR TESTING
-    console.log('[TEST] Audio disabled - would play:', soundName);
-    return Promise.resolve();
+    if (!this.soundsEnabled || !this.isInitialized) {
+      return;
+    }
+
+    try {
+      const sound = this.sounds.get(soundName);
+
+      if (sound && typeof sound.play === 'function') {
+        try {
+          if (sound.playing) {
+            sound.pause();
+          }
+          await sound.seekTo(0).catch(() => {});
+        } catch (seekError) {
+          console.warn(`Failed to reset sound ${soundName}:`, seekError);
+        }
+
+        const volume = options.volume !== undefined
+          ? options.volume * this.volumeLevel
+          : this.volumeLevel;
+
+        sound.volume = Math.max(0, Math.min(1, volume));
+        sound.play();
+      } else {
+        // Fallback to programmatic sound
+        await this.createBeepSound(options.frequency, options.duration);
+      }
+    } catch (error) {
+      console.warn(`Failed to play sound ${soundName}:`, error);
+    }
   }
 
   async playCountdown(count) {
@@ -125,9 +152,8 @@ class AudioService {
   }
 
   async playExerciseStart() {
-    // TEMPORARILY DISABLED FOR TESTING
-    console.log('[TEST] playExerciseStart() disabled');
-    return Promise.resolve();
+    await this.playSound('exerciseStart');
+    await this.vibrate('exerciseStart');
   }
 
   async playRestStart() {
@@ -171,9 +197,48 @@ class AudioService {
 
   // Vibration patterns
   async vibrate(pattern) {
-    // TEMPORARILY DISABLED FOR TESTING
-    console.log('[TEST] Haptics disabled - would vibrate:', pattern);
-    return Promise.resolve();
+    if (!this.vibrationsEnabled) {
+      return;
+    }
+
+    try {
+      const patterns = {
+        countdown: [100],
+        exerciseStart: [200],
+        restStart: [100, 50, 100],
+        setComplete: [150, 50, 150],
+        workoutComplete: [200, 100, 200, 100, 200],
+        pause: [100, 100, 100],
+        resume: [200],
+        success: [100, 50, 100, 50, 100],
+        error: [300],
+        button: [50],
+      };
+
+      const vibrationPattern = patterns[pattern] || [100];
+
+      // Use Haptics for more refined feedback on iOS
+      if (pattern === 'countdown' || pattern === 'button') {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      } else if (pattern === 'exerciseStart' || pattern === 'resume') {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } else if (pattern === 'setComplete' || pattern === 'success') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else if (pattern === 'workoutComplete') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        // Additional celebration vibration
+        setTimeout(() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        }, 200);
+      } else if (pattern === 'error') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } else {
+        // Fallback to basic vibration
+        Vibration.vibrate(vibrationPattern);
+      }
+    } catch (error) {
+      console.warn(`Failed to vibrate with pattern ${pattern}:`, error);
+    }
   }
 
   // Settings
