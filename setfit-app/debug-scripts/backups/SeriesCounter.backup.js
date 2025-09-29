@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-// TEMPORARILY DISABLED: import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring } from 'react-native-reanimated';
 import { Card } from '../common';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
@@ -22,12 +22,12 @@ const SeriesCounter = memo(({
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [localReps, setLocalReps] = useState(currentRep);
-  const opacity = { value: 1 }; // MOCK
-  const scale = { value: 1 }; // MOCK
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(1);
 
   useEffect(() => {
     try {
-      // DISABLED: opacity animation
+      opacity.value = withTiming(1, { duration: 500 });
     } catch (error) {
       console.warn('Animation error:', error);
     }
@@ -44,9 +44,9 @@ const SeriesCounter = memo(({
 
     // Animation feedback
     try {
-      // DISABLED: scale animation
+      scale.value = withSpring(1.1, { damping: 20, stiffness: 300 });
       setTimeout(() => {
-        // DISABLED: scale animation
+        scale.value = withSpring(1, { damping: 15, stiffness: 400 });
       }, 150);
     } catch (error) {
       console.warn('Scale animation error:', error);
@@ -81,14 +81,33 @@ const SeriesCounter = memo(({
     }
   };
 
-  const {} = {
-    opacity: 1,
-    transform: [{ scale: 1 }],
-  }; // MOCK ANIMATED STYLE
+  const animatedDisplayStyle = useAnimatedStyle(() => {
+    try {
+      return {
+        opacity: opacity.value,
+        transform: [{ scale: scale.value }],
+      };
+    } catch (error) {
+      console.warn('Animated style error:', error);
+      return {
+        opacity: 1,
+        transform: [{ scale: 1 }],
+      };
+    }
+  });
 
-  const {} = {
-    opacity: 1,
-  }; // MOCK ANIMATED STYLE
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    try {
+      return {
+        opacity: opacity.value,
+      };
+    } catch (error) {
+      console.warn('Container style error:', error);
+      return {
+        opacity: 1,
+      };
+    }
+  });
 
   const renderTimeBased = () => (
     <View style={styles.timeBasedContainer}>
@@ -101,7 +120,7 @@ const SeriesCounter = memo(({
 
       <View style={styles.progressContainer}>
         <View style={styles.progressTrack}>
-          <View // MOCK ANIMATED
+          <Animated.View
             style={[
               styles.progressFill,
               {
@@ -137,7 +156,7 @@ const SeriesCounter = memo(({
           <Text style={styles.repButtonText}>−</Text>
         </TouchableOpacity>
 
-        <View // MOCK ANIMATED style={[styles.repDisplay, {}]}>
+        <Animated.View style={[styles.repDisplay, animatedDisplayStyle]}>
           <Text style={styles.repCount}>{localReps}</Text>
           <Text style={styles.repTarget}>
             {block?.reps ? `/ ${block.reps}` : ''}
@@ -155,7 +174,7 @@ const SeriesCounter = memo(({
 
       <View style={styles.progressContainer}>
         <View style={styles.progressTrack}>
-          <View // MOCK ANIMATED
+          <Animated.View
             style={[
               styles.progressFill,
               {
@@ -185,7 +204,7 @@ const SeriesCounter = memo(({
   );
 
   return (
-    <View // MOCK ANIMATED style={[styles.container, style, {}]}>
+    <Animated.View style={[styles.container, style, animatedContainerStyle]}>
       <Card style={styles.card}>
         {/* Header */}
         <View style={styles.header}>
