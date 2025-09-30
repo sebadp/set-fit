@@ -208,6 +208,12 @@ export const WorkoutExecutionScreen = ({ route, navigation }) => {
           const newTimer = prev + 1;
           const targetDuration = currentBlock.duration || 0;
 
+          // Play countdown sound exactly when 4 seconds remain
+          const timeRemaining = targetDuration - newTimer;
+          if (timeRemaining === 4) {
+            audioService.playFinalCountdown();
+          }
+
           // Auto-complete when time reaches target
           if (targetDuration > 0 && newTimer >= targetDuration) {
             handleSetComplete();

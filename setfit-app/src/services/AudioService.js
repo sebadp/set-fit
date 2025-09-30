@@ -50,6 +50,7 @@ class AudioService {
 
   async loadSounds() {
     const soundAssets = {
+      countdown: require('../../assets/sounds/countdown.mp3'),
       countdown3: require('../../assets/sounds/countdown3.wav'),
       countdown2: require('../../assets/sounds/countdown2.wav'),
       countdown1: require('../../assets/sounds/countdown1.wav'),
@@ -149,6 +150,11 @@ class AudioService {
       await this.playSound(soundName);
       await this.vibrate('countdown');
     }
+  }
+
+  async playFinalCountdown() {
+    await this.playSound('countdown');
+    await this.vibrate('countdown');
   }
 
   async playExerciseStart() {
